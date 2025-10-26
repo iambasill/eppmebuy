@@ -8,10 +8,15 @@ datasource db {
   url      = env("POSTGRES_URL")
 }
 
+
+// ============================================
+// ENUMS
+// ============================================
+
 enum UserRole {
   HOST
   ATTENDEE
-  BOTH // Users can be both hosts and attendees
+  BOTH
 }
 
 enum KYCStatus {
@@ -25,49 +30,139 @@ enum KYCStatus {
 enum PaymentMethodType {
   CARD
   BANK_ACCOUNT
-  DIGITAL_WALLET
+  MOBILE_MONEY
+  WALLET
+  BANK_TRANSFER
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+  COMPLETED
+}
+
+enum EventAccessType {
+  PUBLIC
+  INVITE_ONLY
+  PRIVATE
+}
+
+enum EventCategory {
+  MUSIC
+  SPORTS
+  ARTS
+  TECHNOLOGY
+  BUSINESS
+  FOOD
+  EDUCATION
+  ENTERTAINMENT
+  HEALTH
+  NIGHTLIFE
+  OTHER
+}
+
+enum TicketStatus {
+  ACTIVE
+  USED
+  REFUNDED
+  CANCELLED
+  EXPIRED
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  CONFIRMED
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum RefundStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+enum CheckInMethod {
+  QR_SCAN
+  MANUAL
+  KIOSK
+}
+
+enum QRScanMode {
+  SINGLE_USE
+  MULTI_USE
 }
 
 enum InteractionType {
   VIEW
   CLICK
   SHARE
-  BOOKMARK
-  RSVP
-  PURCHASE
-  OTHER
+  FAVORITE
+  SEARCH
 }
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+// ============================================
+// USER MODELS
+// ============================================
 
 model User {
   id                    String    @id @default(cuid())
   
-  firstName             String    @map("first_name")
-  lastName              String    @map("last_name")
+  // Basic Information
+  fullName              String    @map("full_name")
   email                 String    @unique
   emailVerified         Boolean   @default(false) @map("email_verified")
   phoneNumber           String    @map("phone_number")
   phoneVerified         Boolean   @default(false) @map("phone_verified")
-  password              String    
+  password              String    // Hashed
   
-  // Role Management
   role                  UserRole  @default(ATTENDEE)
   
-  // Optional Basic Fields
+  // Optional Fields
   profilePictureUrl     String?   @map("profile_picture_url")
+  bio                   String?   @db.Text
   
   // Host-Specific Fields
   organizationName      String?   @map("organization_name")
-  address               String?   // Store as JSON string for structured address
+  address               String?
   kycStatus             KYCStatus @default(NOT_REQUIRED) @map("kyc_status")
-  kycDocuments          Json?     @map("kyc_documents") // Store document URLs/IDs
-  payoutDetails         Json?     @map("payout_details") // Stripe Connect ID or bank details
+  kycDocuments          Json?     @map("kyc_documents") // Document URLs/IDs
+  stripeConnectId       String?   @unique @map("stripe_connect_id")
+  paystackSubaccountId  String?   @unique @map("paystack_subaccount_id")
+  payoutDetails         Json?     @map("payout_details")
   
-  // Attendee-Specific Fields
-  savedPaymentMethods   PaymentMethod[]
+  // Contact Info (for hosts)
+  contactEmail          String?   @map("contact_email")
+  contactPhone          String?   @map("contact_phone")
   
-  // Preferences & Metadata (Optional for both)
-  preferences           Json?     // Store genres, locations as JSON
-  deviceTokens          String[]  @map("device_tokens") // For push notifications
+  // Preferences & Metadata
+  preferences           Json?     // Genres, locations, price ranges
+  deviceTokens          String[]  @map("device_tokens")
   language              String?   @default("en")
   timezone              String?   @default("UTC")
   
@@ -77,10 +172,20 @@ model User {
   lastLogin             DateTime? @map("last_login")
   
   // Relations
+  savedPaymentMethods   PaymentMethod[]
   hostedEvents          Event[]   @relation("HostedEvents")
-  bookings              Booking[]
+  orders                Order[]
+  tickets               Ticket[]
   reviews               Review[]
+  interactions          UserInteraction[]
+  favorites             Favorite[]
+  searchHistory         SearchHistory[]
+  checkIns              CheckIn[] @relation("Scanner")
+  notifications         Notification[]
+  payouts               Payout[]
   
+  @@index([email])
+  @@index([role])
   @@map("users")
 }
 
@@ -90,9 +195,10 @@ model PaymentMethod {
   user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   type                  PaymentMethodType
-  token                 String              // Stripe payment method ID or similar
-  last4                 String?             // Last 4 digits for display
-  brand                 String?             // Card brand (Visa, Mastercard, etc.)
+  provider              String              // stripe, paystack, flutterwave
+  token                 String              // Tokenized payment method ID
+  last4                 String?
+  brand                 String?
   expiryMonth           Int?                @map("expiry_month")
   expiryYear            Int?                @map("expiry_year")
   
@@ -105,46 +211,402 @@ model PaymentMethod {
   @@map("payment_methods")
 }
 
-// Example Event model (for context)
+// ============================================
+// EVENT MODELS
+// ============================================
+
 model Event {
-  id                    String    @id @default(cuid())
-  hostId                String    @map("host_id")
-  host                  User      @relation("HostedEvents", fields: [hostId], references: [id], onDelete: Cascade)
+  id                    String            @id @default(cuid())
+  hostId                String            @map("host_id")
+  host                  User              @relation("HostedEvents", fields: [hostId], references: [id], onDelete: Cascade)
   
+  // Basic Info
   title                 String
-  description           String    @db.Text
+  slug                  String            @unique
+  description           String            @db.Text
+  coverImages           String[]          @map("cover_images")
+  category              EventCategory
+  tags                  String[]
   
-  // Add your event fields here
+  // Timing
+  startDateTime         DateTime          @map("start_datetime")
+  endDateTime           DateTime          @map("end_datetime")
+  timezone              String            @default("UTC")
   
-  bookings              Booking[]
+  // Location
+  isOnline              Boolean           @default(false) @map("is_online")
+  streamingUrl          String?           @map("streaming_url")
+  venueName             String            @map("venue_name")
+  venueAddress          String            @map("venue_address")
+  city                  String
+  state                 String?
+  country               String
+  latitude              Float?
+  longitude             Float?
+  
+  // Capacity & Access
+  totalCapacity         Int               @map("total_capacity")
+  accessType            EventAccessType   @default(PUBLIC) @map("access_type")
+  ageRestriction        Int?              @map("age_restriction") // Minimum age
+  guestList             String[]          @map("guest_list") // Email list for invite-only
+  
+  // Pricing & Fees
+  currency              String            @default("USD")
+  hostFeePercent        Decimal?          @map("host_fee_percent") @db.Decimal(5, 2)
+  hostFeeFixed          Decimal?          @map("host_fee_fixed") @db.Decimal(10, 2)
+  platformFeePercent    Decimal           @map("platform_fee_percent") @db.Decimal(5, 2)
+  platformFeeFixed      Decimal?          @map("platform_fee_fixed") @db.Decimal(10, 2)
+  taxRate               Decimal?          @map("tax_rate") @db.Decimal(5, 2)
+  
+  // Ticketing Settings
+  ticketLimitPerOrder   Int               @default(10) @map("ticket_limit_per_order")
+  requiresDelivery      Boolean           @default(false) @map("requires_delivery")
+  
+  // Check-in Settings
+  checkInMethod         CheckInMethod     @default(QR_SCAN) @map("checkin_method")
+  qrScanMode            QRScanMode        @default(SINGLE_USE) @map("qr_scan_mode")
+  checkInWindowStart    DateTime?         @map("checkin_window_start")
+  checkInWindowEnd      DateTime?         @map("checkin_window_end")
+  
+  // Refund Policy
+  refundPolicy          String?           @map("refund_policy") @db.Text
+  refundableUntil       DateTime?         @map("refundable_until")
+  
+  // Publication
+  status                EventStatus       @default(DRAFT)
+  visibilityDate        DateTime?         @map("visibility_date")
+  isFeatured            Boolean           @default(false) @map("is_featured")
+  
+  // Metrics
+  viewCount             Int               @default(0) @map("view_count")
+  ticketsSold           Int               @default(0) @map("tickets_sold")
+  grossRevenue          Decimal           @default(0) @map("gross_revenue") @db.Decimal(10, 2)
+  averageRating         Float?            @map("average_rating")
+  totalReviews          Int               @default(0) @map("total_reviews")
+  
+  // Timestamps
+  createdAt             DateTime          @default(now()) @map("created_at")
+  updatedAt             DateTime          @updatedAt @map("updated_at")
+  publishedAt           DateTime?         @map("published_at")
+  
+  // Relations
+  ticketTiers           TicketTier[]
+  addOns                AddOn[]
+  promoCodes            PromoCode[]
+  orders                Order[]
+  tickets               Ticket[]
   reviews               Review[]
-  
-  createdAt             DateTime  @default(now()) @map("created_at")
-  updatedAt             DateTime  @updatedAt @map("updated_at")
+  interactions          UserInteraction[]
+  favorites             Favorite[]
+  checkIns              CheckIn[]
   
   @@index([hostId])
+  @@index([category])
+  @@index([city, country])
+  @@index([startDateTime])
+  @@index([status])
+  @@index([isFeatured])
   @@map("events")
 }
 
-// Example Booking model (for context)
-model Booking {
-  id                    String    @id @default(cuid())
-  userId                String    @map("user_id")
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  eventId               String    @map("event_id")
-  event                 Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+model TicketTier {
+  id                    String      @id @default(cuid())
+  eventId               String      @map("event_id")
+  event                 Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
   
-  // Add your booking fields here
+  name                  String      // General Admission, VIP, Early Bird
+  description           String?     @db.Text
+  priceCents            Int         @map("price_cents")
+  currency              String      @default("USD")
+  quantity              Int
+  quantitySold          Int         @default(0) @map("quantity_sold")
   
-  createdAt             DateTime  @default(now()) @map("created_at")
-  updatedAt             DateTime  @updatedAt @map("updated_at")
+  // Sales Window
+  salesStart            DateTime    @map("sales_start")
+  salesEnd              DateTime    @map("sales_end")
+  
+  // Features
+  isRefundable          Boolean     @default(true) @map("is_refundable")
+  refundableUntil       DateTime?   @map("refundable_until")
+  features              String[]    // Perks like "Early entry", "Free drink"
+  
+  // Seating
+  hasReservedSeating    Boolean     @default(false) @map("has_reserved_seating")
+  seatZone              String?     @map("seat_zone")
+  
+  isVisible             Boolean     @default(true) @map("is_visible")
+  sortOrder             Int         @default(0) @map("sort_order")
+  
+  createdAt             DateTime    @default(now()) @map("created_at")
+  updatedAt             DateTime    @updatedAt @map("updated_at")
+  
+  // Relations
+  orderItems            OrderItem[]
+  tickets               Ticket[]
+  
+  @@index([eventId])
+  @@map("ticket_tiers")
+}
+
+model AddOn {
+  id                    String      @id @default(cuid())
+  eventId               String      @map("event_id")
+  event                 Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  name                  String      // Parking Pass, VIP Lounge, Merchandise
+  description           String?     @db.Text
+  priceCents            Int         @map("price_cents")
+  currency              String      @default("USD")
+  quantity              Int?        // null = unlimited
+  quantitySold          Int         @default(0) @map("quantity_sold")
+  
+  isVisible             Boolean     @default(true) @map("is_visible")
+  
+  createdAt             DateTime    @default(now()) @map("created_at")
+  updatedAt             DateTime    @updatedAt @map("updated_at")
+  
+  // Relations
+  orderItems            OrderItem[]
+  
+  @@index([eventId])
+  @@map("add_ons")
+}
+
+model PromoCode {
+  id                    String        @id @default(cuid())
+  eventId               String        @map("event_id")
+  event                 Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  code                  String
+  discountType          DiscountType  @map("discount_type")
+  discountValue         Decimal       @map("discount_value") @db.Decimal(10, 2)
+  
+  usageLimit            Int?          @map("usage_limit")
+  usageCount            Int           @default(0) @map("usage_count")
+  
+  validFrom             DateTime      @map("valid_from")
+  validUntil            DateTime      @map("valid_until")
+  
+  isActive              Boolean       @default(true) @map("is_active")
+  
+  createdAt             DateTime      @default(now()) @map("created_at")
+  updatedAt             DateTime      @updatedAt @map("updated_at")
+  
+  // Relations
+  orders                Order[]
+  
+  @@unique([eventId, code])
+  @@index([code])
+  @@map("promo_codes")
+}
+
+// ============================================
+// ORDER & PAYMENT MODELS
+// ============================================
+
+model Order {
+  id                    String        @id @default(cuid())
+  orderReference        String        @unique @map("order_reference")
+  
+  userId                String        @map("user_id")
+  user                  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventId               String        @map("event_id")
+  event                 Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  // Order Details
+  status                OrderStatus   @default(PENDING)
+  
+  // Pricing Breakdown
+  subtotalCents         Int           @map("subtotal_cents")
+  platformFeeCents      Int           @map("platform_fee_cents")
+  hostFeeCents          Int           @default(0) @map("host_fee_cents")
+  taxCents              Int           @default(0) @map("tax_cents")
+  discountCents         Int           @default(0) @map("discount_cents")
+  totalCents            Int           @map("total_cents")
+  currency              String        @default("USD")
+  
+  // Promo Code
+  promoCodeId           String?       @map("promo_code_id")
+  promoCode             PromoCode?    @relation(fields: [promoCodeId], references: [id])
+  
+  // Attendee Info
+  attendeeInfo          Json?         @map("attendee_info") // Names, emails for tickets
+  
+  // Payment
+  paymentProvider       String?       @map("payment_provider") // stripe, paystack
+  paymentIntentId       String?       @map("payment_intent_id")
+  paymentStatus         PaymentStatus @default(PENDING) @map("payment_status")
+  paidAt                DateTime?     @map("paid_at")
+  
+  // Timestamps
+  createdAt             DateTime      @default(now()) @map("created_at")
+  updatedAt             DateTime      @updatedAt @map("updated_at")
+  
+  // Relations
+  orderItems            OrderItem[]
+  tickets               Ticket[]
+  refunds               Refund[]
   
   @@index([userId])
   @@index([eventId])
-  @@map("bookings")
+  @@index([status])
+  @@index([createdAt])
+  @@map("orders")
 }
 
-// Example Review model (for context)
+model OrderItem {
+  id                    String      @id @default(cuid())
+  orderId               String      @map("order_id")
+  order                 Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  // Item Type (Ticket or Add-on)
+  ticketTierId          String?     @map("ticket_tier_id")
+  ticketTier            TicketTier? @relation(fields: [ticketTierId], references: [id])
+  addOnId               String?     @map("add_on_id")
+  addOn                 AddOn?      @relation(fields: [addOnId], references: [id])
+  
+  quantity              Int
+  unitPriceCents        Int         @map("unit_price_cents")
+  totalPriceCents       Int         @map("total_price_cents")
+  currency              String      @default("USD")
+  
+  createdAt             DateTime    @default(now()) @map("created_at")
+  
+  @@index([orderId])
+  @@map("order_items")
+}
+
+// ============================================
+// TICKET MODELS
+// ============================================
+
+model Ticket {
+  id                    String        @id @default(cuid())
+  ticketId              String        @unique @map("ticket_id") // Public-facing UUID
+  
+  orderId               String        @map("order_id")
+  order                 Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  eventId               String        @map("event_id")
+  event                 Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  ticketTierId          String        @map("ticket_tier_id")
+  ticketTier            TicketTier    @relation(fields: [ticketTierId], references: [id])
+  
+  ownerId               String        @map("owner_id")
+  owner                 User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  
+  // Ticket Details
+  attendeeName          String?       @map("attendee_name")
+  attendeeEmail         String?       @map("attendee_email")
+  seatNumber            String?       @map("seat_number")
+  seatZone              String?       @map("seat_zone")
+  
+  // QR Code
+  qrCodeData            String        @map("qr_code_data") // Signed payload
+  qrCodeImageUrl        String        @map("qr_code_image_url")
+  
+  // Status
+  status                TicketStatus  @default(ACTIVE)
+  
+  // Usage
+  issuedAt              DateTime      @default(now()) @map("issued_at")
+  expiresAt             DateTime?     @map("expires_at")
+  usedAt                DateTime?     @map("used_at")
+  
+  createdAt             DateTime      @default(now()) @map("created_at")
+  updatedAt             DateTime      @updatedAt @map("updated_at")
+  
+  // Relations
+  checkIns              CheckIn[]
+  
+  @@index([orderId])
+  @@index([eventId])
+  @@index([ownerId])
+  @@index([status])
+  @@map("tickets")
+}
+
+model CheckIn {
+  id                    String    @id @default(cuid())
+  
+  ticketId              String    @map("ticket_id")
+  ticket                Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  eventId               String    @map("event_id")
+  event                 Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  scannerId             String?   @map("scanner_id")
+  scanner               User?     @relation("Scanner", fields: [scannerId], references: [id])
+  
+  method                CheckInMethod
+  deviceInfo            Json?     @map("device_info") // Device type, OS, app version
+  
+  checkedInAt           DateTime  @default(now()) @map("checked_in_at")
+  
+  @@index([ticketId])
+  @@index([eventId])
+  @@map("check_ins")
+}
+
+// ============================================
+// REFUND MODELS
+// ============================================
+
+model Refund {
+  id                    String        @id @default(cuid())
+  
+  orderId               String        @map("order_id")
+  order                 Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  amountCents           Int           @map("amount_cents")
+  currency              String        @default("USD")
+  
+  reason                String?       @db.Text
+  status                RefundStatus  @default(PENDING)
+  
+  // Payment Provider Info
+  refundId              String?       @map("refund_id") // Provider's refund ID
+  
+  requestedAt           DateTime      @default(now()) @map("requested_at")
+  processedAt           DateTime?     @map("processed_at")
+  
+  @@index([orderId])
+  @@map("refunds")
+}
+
+// ============================================
+// PAYOUT MODELS
+// ============================================
+
+model Payout {
+  id                    String        @id @default(cuid())
+  
+  hostId                String        @map("host_id")
+  host                  User          @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  
+  amountCents           Int           @map("amount_cents")
+  currency              String        @default("USD")
+  
+  provider              String        // stripe, paystack, flutterwave
+  payoutId              String?       @map("payout_id") // Provider's payout ID
+  
+  status                PayoutStatus  @default(PENDING)
+  
+  // Metadata
+  periodStart           DateTime      @map("period_start")
+  periodEnd             DateTime      @map("period_end")
+  orderCount            Int           @map("order_count")
+  
+  createdAt             DateTime      @default(now()) @map("created_at")
+  processedAt           DateTime?     @map("processed_at")
+  
+  @@index([hostId])
+  @@index([status])
+  @@map("payouts")
+}
+
+// ============================================
+// REVIEW & RATING MODELS
+// ============================================
+
 model Review {
   id                    String    @id @default(cuid())
   userId                String    @map("user_id")
@@ -153,19 +615,25 @@ model Review {
   event                 Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
   
   rating                Int       // 1-5 stars
+  title                 String?
   comment               String?   @db.Text
+  
+  isVerifiedAttendee    Boolean   @default(false) @map("is_verified_attendee")
+  helpfulCount          Int       @default(0) @map("helpful_count")
   
   createdAt             DateTime  @default(now()) @map("created_at")
   updatedAt             DateTime  @updatedAt @map("updated_at")
   
-  @@index([userId])
+  @@unique([userId, eventId])
   @@index([eventId])
+  @@index([rating])
   @@map("reviews")
 }
 
+// ============================================
+// RECOMMENDATION SYSTEM MODELS
+// ============================================
 
-
-// Track all user interactions for recommendation engine
 model UserInteraction {
   id                    String          @id @default(cuid())
   userId                String          @map("user_id")
@@ -173,27 +641,22 @@ model UserInteraction {
   eventId               String          @map("event_id")
   event                 Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
   
-  // Interaction Details
   interactionType       InteractionType @map("interaction_type")
-  sessionId             String?         @map("session_id") // Group interactions by session
+  sessionId             String?         @map("session_id")
   
-  // Context
-  source                String?         // homepage, search, category_page, etc.
-  deviceType            String?         @map("device_type") // mobile, desktop, tablet
+  source                String?         // homepage, search, recommendations
+  deviceType            String?         @map("device_type")
   
-  // Metrics
-  durationSeconds       Int?            @map("duration_seconds") // Time spent viewing
-  scrollDepth           Int?            @map("scroll_depth") // Percentage scrolled
+  durationSeconds       Int?            @map("duration_seconds")
+  scrollDepth           Int?            @map("scroll_depth")
   
   createdAt             DateTime        @default(now()) @map("created_at")
   
   @@index([userId, createdAt])
   @@index([eventId, interactionType])
-  @@index([sessionId])
   @@map("user_interactions")
 }
 
-// User favorites/wishlist
 model Favorite {
   id                    String    @id @default(cuid())
   userId                String    @map("user_id")
@@ -208,16 +671,15 @@ model Favorite {
   @@map("favorites")
 }
 
-// Search history for understanding user intent
 model SearchHistory {
   id                    String    @id @default(cuid())
   userId                String    @map("user_id")
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   query                 String
-  filters               Json?     // Category, location, price range filters used
+  filters               Json?     // Category, location, price, date filters
   resultsCount          Int       @map("results_count")
-  clickedEventId        String?   @map("clicked_event_id") // Which result was clicked
+  clickedEventId        String?   @map("clicked_event_id")
   
   createdAt             DateTime  @default(now()) @map("created_at")
   
@@ -225,30 +687,46 @@ model SearchHistory {
   @@map("search_history")
 }
 
-// ============================================
-// RECOMMENDATION SCORES (Computed/Cached)
-// ============================================
-
-// Store computed recommendation scores for faster queries
 model UserEventScore {
   id                    String    @id @default(cuid())
   userId                String    @map("user_id")
   eventId               String    @map("event_id")
   
-  // Composite score (0-100)
   score                 Float
   
-  // Individual score components
-  collaborativeScore    Float?    @map("collaborative_score") // Based on similar users
-  contentScore          Float?    @map("content_score")       // Based on event attributes
-  popularityScore       Float?    @map("popularity_score")    // Based on trending
-  recencyScore          Float?    @map("recency_score")       // Based on event date
+  collaborativeScore    Float?    @map("collaborative_score")
+  contentScore          Float?    @map("content_score")
+  popularityScore       Float?    @map("popularity_score")
+  recencyScore          Float?    @map("recency_score")
   
-  // Metadata
   computedAt            DateTime  @map("computed_at")
   
   @@unique([userId, eventId])
   @@index([userId, score])
-  @@index([computedAt]) // For refreshing old scores
+  @@index([computedAt])
   @@map("user_event_scores")
+}
+
+// ============================================
+// NOTIFICATION MODELS
+// ============================================
+
+model Notification {
+  id                    String    @id @default(cuid())
+  userId                String    @map("user_id")
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type                  String    // purchase_receipt, event_reminder, check_in_update
+  title                 String
+  message               String    @db.Text
+  
+  data                  Json?     // Additional payload (event_id, order_id, etc.)
+  
+  isRead                Boolean   @default(false) @map("is_read")
+  
+  createdAt             DateTime  @default(now()) @map("created_at")
+  
+  @@index([userId, isRead])
+  @@map("notifications")
+
 }
