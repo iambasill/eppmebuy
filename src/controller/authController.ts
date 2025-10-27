@@ -1,39 +1,32 @@
 import express, { Request, Response, NextFunction } from "express";
-import { prisma } from "../server";
-import { BadRequestError } from "../httpClass/exceptions";
-import { signUpSchema, loginSchema } from "../schema/authSchema";
-import { AUTH_JWT_TOKEN } from "../../secrets";
+import { BadRequestError, unAuthorizedError } from "../httpClass/exceptions";
+import { signupSchema, loginSchema } from "../schema/authSchema";
 import bcrypt from 'bcrypt';
-import jwt from "jsonwebtoken";
-// import { sendPasswordResetEmail } from "../utils/emailService";
+import { prismaclient } from "../lib/prisma-postgres";
+import { generateAuthToken, generateLoginToken, verifyToken } from "../utils/func";
+import { User, UserRole } from "../../generated/prisma";
+import sanitize from "sanitize-html";
 
-const generateToken = (userId: string) => {
-  return jwt.sign({ id: userId }, AUTH_JWT_TOKEN as string, { expiresIn: '6h' });
-};
 
-// const generateRefreshToken = (userId: string) => {
-//   return jwt.sign({ id: userId }, REFRESH_TOKEN_SECRET as string, { expiresIn: '7d' });
-// };
 
 // ====================== CONTROLLERS ====================== //
 
 /**
  * Register a new user.
  */
-
 export const registerController = async (req: Request, res: Response, next: NextFunction) => {
-  const validatedData = signUpSchema.parse(req.body);
-  const { email, firstName, lastName, role } = validatedData;
+  const validatedData = signupSchema.parse(req.body);
+  const { email, firstName, lastName, phoneNumber } = validatedData;
+  const userRole: UserRole = (validatedData.role ?? "ATTENDEE") as UserRole;
 
-  const existingUser = await prisma.user.findFirst({ where: { email } });
-//   if (existingUser && (existingUser.status === 'VERIFIED' || existingUser.status === 'BLOCKED')) {
+  const existingUser = await prismaclient.user.findFirst({ where: { email } });
     if (existingUser ){
     throw new BadRequestError('User already exists');
   }
 
   const hashedPassword = await bcrypt.hash("password", 12);
-  const user = await prisma.user.create({
-    data: { email, firstName, lastName, role, password: hashedPassword, status: 'PENDING',refreshToken:"null" }
+  const user = await prismaclient.user.create({
+    data: { email, firstName, lastName, role: userRole, password: hashedPassword, phoneNumber }
   });
 
   // (Optional) Send verification email here.
@@ -44,13 +37,16 @@ export const registerController = async (req: Request, res: Response, next: Next
   });
 };
 
+
+
 /**
  * Login user and return JWT token.
  */
+
 export const loginController = async (req: Request, res: Response) => {
   const { email, password } = loginSchema.parse(req.body);
 
-  const user = await prisma.user.findFirst({ where: { email } });
+  const user = await prismaclient.user.findFirst({ where: { email } , select:{id:true,password:true, status:true}});
   if (!user || user.status === 'BLOCKED') throw new BadRequestError("Invalid Credentials");
 
   const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -58,19 +54,22 @@ export const loginController = async (req: Request, res: Response) => {
 
   const { password: _, ...userData } = user; 
 
-  const token = generateToken(user.id);
-//   const refreshToken = generateRefreshToken(user.id);
+  const {accessToken, refreshToken} = generateAuthToken(user.id);
 
-  // Store refresh token in database (optional)
-//   await prisma.user.update({
-//     where: { id: user.id },
-//     data: { refreshToken }
-//   });
+    await prismaclient.userSession.create({
+      data: {
+        userId: user.id, 
+        refreshToken,
+        userAgent: req.headers['user-agent'] || 'Unknown',
+        ipAddress: req.ip,
+      },
+    });
+
 
   res.status(200).send({
     success: true,
-    token,
-    // refreshToken,
+    accessToken,
+    refreshToken,
     user: userData,
   });
 };
@@ -78,18 +77,21 @@ export const loginController = async (req: Request, res: Response) => {
 /**
  * Refresh access token using refresh token.
  */
-// export const refreshTokenController = async (req: Request, res: Response) => {
-//   const { refreshToken } = req.body;
-//   if (!refreshToken) throw new UnauthorizedError("No refresh token provided");
 
-//   const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET as string) as { id: string };
-//   const user = await prisma.user.findFirst({ where: { id: decoded.id, refreshToken } });
+export const refreshTokenController = async (req: Request, res: Response) => {
+  const refreshToken = sanitize(req.body.refreshToken );
+  if (!refreshToken) throw new unAuthorizedError("No refresh token provided");
 
-//   if (!user) throw new UnauthorizedError("Invalid refresh token");
+  const decoded = verifyToken(refreshToken);
+  const userSession = await prismaclient.userSession.findFirst({ where: { id: decoded.id, refreshToken }, select: { userId: true } });
+  const user:any = await prismaclient.user.findUnique({ where: { id: decoded.id }, select: { id: true ,status:true} });
 
-//   const newToken = generateToken(user.id);
-//   res.status(200).send({ success: true, token: newToken });
-// };
+
+  if (!user || user.status === "BLOCKED", !userSession) throw new unAuthorizedError("Invalid refresh token");
+
+  const newToken = generateLoginToken(user.id);
+  res.status(200).send({ success: true, accessToken: newToken });
+};
 
 /**
  * Change user password (requires old password).

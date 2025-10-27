@@ -26,15 +26,21 @@ const sanitizeObject = <T extends z.ZodRawShape>(schema: z.ZodObject<T>) => {
 };
 
 
-export const signUpSchema = z.object({
-    firstName: z.string(),
-    lastName: z.string(),
-    email:z.email()
-})
 
-export const changePasswordSchema= sanitizeObject(z.object({
-    token:z.string(),
-    newPassword: z.string()
+export const signupSchema= sanitizeObject(z.object({
+  firstName: z.string(), 
+  lastName: z.string(),             
+  email: z.string(),                 
+  phoneNumber: z.string(),           
+  password: z.string(),              
+  role: z.string().optional()           
 }))
+
+
+export const loginSchema= sanitizeObject(z.object({    
+  email: z.string(),                 
+  password: z.string(),              
+}))
+
 
 

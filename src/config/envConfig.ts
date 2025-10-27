@@ -6,6 +6,7 @@ dotenv.config({path:'.env'})
 interface Config {
     AUTH_JWT_TOKEN: string
     AUTH_RESET_TOKEN : string
+    AUTH_JWT_RESET_TOKEN : string
     API_BASE_URL : string
     CLIENT_URL :string
     DB_PROVIDER: string
@@ -16,6 +17,7 @@ interface Config {
 export const config : Config ={
     AUTH_JWT_TOKEN: process.env.AUTH_JWT_TOKEN!,
     AUTH_RESET_TOKEN : process.env.AUTH_RESET_TOKEN!,
+    AUTH_JWT_RESET_TOKEN : process.env.AUTH_JWT_RESET_TOKEN!,
     API_BASE_URL : process.env.API_BASE_URL!,
     CLIENT_URL : process.env.CLIENT_URL!,
     DB_PROVIDER : process.env.DB_PROVIDER!,
