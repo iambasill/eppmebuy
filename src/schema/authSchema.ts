@@ -42,5 +42,19 @@ export const loginSchema= sanitizeObject(z.object({
   password: z.string(),              
 }))
 
+export const refreshTokenSchema= sanitizeObject(z.object({    
+  refreshToken: z.string().optional(),                 
+})) 
+export const resetPasswordSchema= sanitizeObject(z.object({    
+  resetToken: z.string(),                 
+  newPassword: z.string(),              
+}))
+export const forgotPasswordSchema= sanitizeObject(z.object({    
+  email: z.string(),                 
+}))
+export const changePasswordSchema= sanitizeObject(z.object({    
+  currentPassword: z.string(),                 
+  newPassword: z.string(),              
+}))
 
 

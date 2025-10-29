@@ -171,6 +171,7 @@ model User {
   createdAt             DateTime  @default(now()) @map("created_at")
   updatedAt             DateTime  @updatedAt @map("updated_at")
   lastLogin             DateTime? @map("last_login")
+  resetToken           String?   @map("reset_token")
   
   // Relations
   savedPaymentMethods   PaymentMethod[]
@@ -199,7 +200,7 @@ model UserSession {
   userAgent             String?   @map("user_agent")
   ipAddress             String?   @map("ip_address")
   createdAt             DateTime  @default(now()) @map("created_at")
-  expiresAt             DateTime  @map("expires_at")
+  loggedOutAt           DateTime? @map("logged_out_at")
   
   @@index([userId])
   @@map("user_sessions")

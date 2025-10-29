@@ -1,9 +1,9 @@
 import express, { Request, Response, NextFunction } from "express";
 import { BadRequestError, unAuthorizedError } from "../httpClass/exceptions";
-import { signupSchema, loginSchema } from "../schema/authSchema";
+import { signupSchema, loginSchema, changePasswordSchema, refreshTokenSchema, forgotPasswordSchema, resetPasswordSchema } from "../schema/authSchema";
 import bcrypt from 'bcrypt';
 import { prismaclient } from "../lib/prisma-postgres";
-import { generateAuthToken, generateLoginToken, verifyToken } from "../utils/func";
+import { createUserSession, generateAuthToken, generateToken, verifyToken } from "../utils/func";
 import { User, UserRole } from "../../generated/prisma";
 import sanitize from "sanitize-html";
 
@@ -54,16 +54,9 @@ export const loginController = async (req: Request, res: Response) => {
 
   const { password: _, ...userData } = user; 
 
-  const {accessToken, refreshToken} = generateAuthToken(user.id);
+  const {accessToken, refreshToken} = await generateAuthToken(user.id);
 
-    await prismaclient.userSession.create({
-      data: {
-        userId: user.id, 
-        refreshToken,
-        userAgent: req.headers['user-agent'] || 'Unknown',
-        ipAddress: req.ip,
-      },
-    });
+  await createUserSession(user.id, refreshToken, req);
 
 
   res.status(200).send({
@@ -79,98 +72,91 @@ export const loginController = async (req: Request, res: Response) => {
  */
 
 export const refreshTokenController = async (req: Request, res: Response) => {
-  const refreshToken = sanitize(req.body.refreshToken );
-  if (!refreshToken) throw new unAuthorizedError("No refresh token provided");
+  const { refreshToken: token } = refreshTokenSchema.parse(req.body);
+  if (!token) throw new unAuthorizedError("No refresh token provided");
 
-  const decoded = verifyToken(refreshToken);
-  const userSession = await prismaclient.userSession.findFirst({ where: { id: decoded.id, refreshToken }, select: { userId: true } });
+  const decoded = await verifyToken(token);
+  const userSession = await prismaclient.userSession.findFirst({ where: { id: decoded.id, refreshToken:token , loggedOutAt:null }, select: { userId: true } });
   const user:any = await prismaclient.user.findUnique({ where: { id: decoded.id }, select: { id: true ,status:true} });
 
 
   if (!user || user.status === "BLOCKED", !userSession) throw new unAuthorizedError("Invalid refresh token");
 
-  const newToken = generateLoginToken(user.id);
-  res.status(200).send({ success: true, accessToken: newToken });
+  const {accessToken, refreshToken} = await generateAuthToken(user.id);
+  await createUserSession(user.id, refreshToken, req);
+  res.status(200).send({ success: true, accessToken: accessToken, refreshToken:refreshToken});
 };
+
+
 
 /**
  * Change user password (requires old password).
  */
-// export const changePasswordController = async (req: Request, res: Response) => {
-//   const userId = req.user?.id; // Assuming `req.user` is set by auth middleware
-//   const { oldPassword, newPassword } = changePasswordSchema.parse(req.body);
 
-//   const user = await prisma.user.findUnique({ where: { id: userId } });
-//   if (!user) throw new BadRequestError("User not found");
+export const changePasswordController = async (req: Request, res: Response) => {
+  let user = req.user as User; 
+  const { currentPassword, newPassword } = changePasswordSchema.parse(req.body);
 
-//   const isOldPasswordValid = await bcrypt.compare(oldPassword, user.password);
-//   if (!isOldPasswordValid) throw new BadRequestError("Old password is incorrect");
+  const isOldPasswordValid = await bcrypt.compare(currentPassword, user.password);
+  if (!isOldPasswordValid) throw new BadRequestError("Old password is incorrect");
 
-//   const hashedNewPassword = await bcrypt.hash(newPassword, 12);
-//   await prisma.user.update({
-//     where: { id: userId },
-//     data: { password: hashedNewPassword }
-//   });
+  const hashedNewPassword = await bcrypt.hash(newPassword, 12);
 
-//   res.status(200).send({ success: true, message: "Password updated successfully" });
-// };
+  await prismaclient.user.update({
+    where: { id: user.id },
+    data: { password: hashedNewPassword }
+  });
+
+  res.status(200).send({ success: true, message: "Password updated successfully" });
+
+};
 
 /**
  * Initiate password reset (sends reset link via email).
  */
-// export const forgotPasswordController = async (req: Request, res: Response) => {
-//   const { email } = req.body;
-//   const user = await prisma.user.findFirst({ where: { email } });
-//   if (!user) return res.status(200).send({ success: true }); // Don't reveal if user exists
 
-//   const resetToken = crypto.randomBytes(20).toString('hex');
-//   const resetTokenExpiry = new Date(Date.now() + PASSWORD_RESET_EXPIRY);
+export const forgotPasswordController = async (req: Request, res: Response) => {
+  const { email } = forgotPasswordSchema.parse(req.body);
+  const user = await prismaclient.user.findFirst({ where: { email } });
+  if (!user) return res.status(200).send({ success: true }); // Don't reveal if user exists
 
-//   await prisma.user.update({
-//     where: { id: user.id },
-//     data: { resetToken, resetTokenExpiry }
-//   });
+  const resetToken = await generateToken(user.id);
 
-//   await sendPasswordResetEmail(email, resetToken); // Implement this in `emailService.ts`
+  await prismaclient.user.update({
+    where: { id: user.id },
+    data: { resetToken }
+  });
 
-//   res.status(200).send({ success: true, message: "Password reset link sent to email" });
-// };
+  // await sendPasswordResetEmail(email, resetToken); // Implement this in `emailService.ts`
+
+  res.status(200).send({ success: true, message: "Password reset link sent to email" });
+};
+
+
 
 /**
  * Reset password using a valid token.
  */
-// export const resetPasswordController = async (req: Request, res: Response) => {
-//   const { token, newPassword } = resetPasswordSchema.parse(req.body);
+export const resetPasswordController = async (req: Request, res: Response) => {
+  const { resetToken, newPassword } = resetPasswordSchema.parse(req.body);
 
-//   const user = await prisma.user.findFirst({
-//     where: {
-//       resetToken: token,
-//       resetTokenExpiry: { gt: new Date() } // Token not expired
-//     }
-//   });
+  const user = await prismaclient.user.findFirst({
+    where: {
+      resetToken: resetToken,
+    }
+  });
 
-//   if (!user) throw new BadRequestError("Invalid or expired token");
+  if (!user) throw new BadRequestError("Invalid or expired token");
 
-//   const hashedPassword = await bcrypt.hash(newPassword, 12);
-//   await prisma.user.update({
-//     where: { id: user.id },
-//     data: { password: hashedPassword, resetToken: null, resetTokenExpiry: null }
-//   });
+  await verifyToken(resetToken, "reset");
 
-//   res.status(200).send({ success: true, message: "Password reset successful" });
-// };
+  const hashedPassword = await bcrypt.hash(newPassword, 12);
+  await prismaclient.user.update({
+    where: { id: user.id },
+    data: { password: hashedPassword, resetToken: null }
+  });
 
-/**
- * Logout user (revokes refresh token).
- */
-// export const logoutController = async (req: Request, res: Response) => {
-//   const userId = req.user?.id;
-//   if (!userId) throw new UnauthorizedError("Not authenticated");
+  res.status(200).send({ success: true, message: "Password reset successful" });
+};
 
-//   await prisma.user.update({
-//     where: { id: userId },
-//     data: { refreshToken: null }
-//   });
-
-//   res.status(200).send({ success: true, message: "Logged out successfully" });
-// };
+// ====================== END CONTROLLERS ====================== //
