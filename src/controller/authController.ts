@@ -5,7 +5,6 @@ import bcrypt from 'bcrypt';
 import { prismaclient } from "../lib/prisma-postgres";
 import { createUserSession, generateAuthToken, generateToken, verifyToken } from "../utils/func";
 import { User, UserRole } from "../../generated/prisma";
-import sanitize from "sanitize-html";
 
 
 
@@ -116,8 +115,8 @@ export const changePasswordController = async (req: Request, res: Response) => {
  */
 
 export const forgotPasswordController = async (req: Request, res: Response) => {
-  const { email } = forgotPasswordSchema.parse(req.body);
-  const user = await prismaclient.user.findFirst({ where: { email } });
+  const { email, phoneNumber } = forgotPasswordSchema.parse(req.body);
+  const user = await prismaclient.user.findFirst({ where: { OR: [ { email }, { phoneNumber } ] } });
   if (!user) throw new BadRequestError("User with this email does not exist");
 
   const resetToken = await generateToken(user.id);
