@@ -118,7 +118,7 @@ export const changePasswordController = async (req: Request, res: Response) => {
 export const forgotPasswordController = async (req: Request, res: Response) => {
   const { email } = forgotPasswordSchema.parse(req.body);
   const user = await prismaclient.user.findFirst({ where: { email } });
-  if (!user) return res.status(200).send({ success: true }); // Don't reveal if user exists
+  if (!user) throw new BadRequestError("User with this email does not exist");
 
   const resetToken = await generateToken(user.id);
 

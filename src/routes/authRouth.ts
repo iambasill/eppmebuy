@@ -1,5 +1,6 @@
 import express from 'express'
-import { loginController, registerController} from '../controller/authController'
+import { changePasswordController, forgotPasswordController, loginController, refreshTokenController, registerController, resetPasswordController} from '../controller/authController'
+import { authMiddleware } from '../middlewares/authMiddleware'
 
 export const authRoute = express()
 
@@ -8,8 +9,9 @@ authRoute.get('/',()=>{
 })
 authRoute.post('/login',loginController)
 authRoute.post('/signup',registerController)
-// authRoute.post('/send-verification', verifyEmailController)
-// authRoute.post('/verify-email', verifyCode)
-// authRoute.post('/reset-password',resetPassword)
-// authRoute.post('/verify-account',verifyAccount)
+
+authRoute.post('/reset-password',resetPasswordController)
+authRoute.post('/forgot-password',forgotPasswordController)
+authRoute.post('/change-password',authMiddleware,changePasswordController)
+authRoute.post('/refresh-token',refreshTokenController)
 
