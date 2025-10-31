@@ -11,6 +11,7 @@ interface Config {
     CLIENT_URL :string
     DB_PROVIDER: string
     DATABASE_URL: string
+    PORT: string
 }
 
 
@@ -21,7 +22,8 @@ export const config : Config ={
     API_BASE_URL : process.env.API_BASE_URL!,
     CLIENT_URL : process.env.CLIENT_URL!,
     DB_PROVIDER : process.env.DB_PROVIDER!,
-    DATABASE_URL : process.env.DATABASE_URL!
+    DATABASE_URL : process.env.DATABASE_URL!,
+    PORT : process.env.PORT! || '5000'
 
 }
 

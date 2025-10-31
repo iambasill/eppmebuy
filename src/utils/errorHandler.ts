@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
 import { http_Exception } from '../httpClass/extendHttp';
 import logger from './logger';
-
+import multer from 'multer';
 
 
 export const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {

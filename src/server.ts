@@ -5,7 +5,7 @@ import cors from 'cors'
 import { morganMiddleware } from './utils/logger';
 import rateLimit from 'express-rate-limit';
 import slowDown from 'express-slow-down';
-import { PORT } from '../secrets';
+import { config } from './config/envConfig';
 
 const app = express()
 
@@ -45,6 +45,6 @@ app.use('/', rootRoute)
 
 
 app.use(errorHandler)
-app.listen(PORT,()=>{
-    console.log(`connected to port ${PORT}`)
+app.listen(config.PORT,()=>{
+    console.log(`connected to port ${config.PORT}`)
 })
