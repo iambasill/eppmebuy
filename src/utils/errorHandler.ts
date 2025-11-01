@@ -13,6 +13,7 @@ export const errorHandler = (err: Error, req: Request, res: Response, next: Next
     path: req.path,
     method: req.method,
     query: req.query,
+    errorMessage: err.message
   });
 
 
