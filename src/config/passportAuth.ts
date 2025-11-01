@@ -57,37 +57,35 @@ passport.use(
 passport.use(new FacebookStrategy({
     clientID: config.FACEBOOK_APP_ID || '',
     clientSecret: config.FACEBOOK_APP_SECRET || '',
-    callbackURL: config.GOOGLE_CALLBACK_URL || '',
+    callbackURL: config.FACEBOOK_CALLBACK_URL || '', // Fixed: Use Facebook callback URL
+    profileFields: ['id', 'emails', 'name', 'displayName'], // Required for Facebook
     passReqToCallback: true,
-
-
   },
-  async ( req, accessToken, refreshToken, profile, done) => {
-        const user = await prismaclient.user.upsert({
-          where: { googleId: profile.id },
-          update: {
-            email: profile.emails?.[0]?.value || '',
-            firstName: profile.name?.givenName || '',
-            lastName: profile.name?.familyName || '',
-          },
-          create: {
-            facebookId: profile.id,
-            email: profile.emails?.[0]?.value || '',
-            firstName: profile.name?.givenName || '',
-            lastName: profile.name?.familyName || '',
-            status: 'ACTIVE',
-          },
-          select: { 
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            phoneNumber: true,
-            role: true,
-            status: true
-           },
-
-        });
+  async (req, accessToken, refreshToken, profile, done) => {
+      const user = await prismaclient.user.upsert({
+        where: { facebookId: profile.id }, // Fixed: Use facebookId instead of googleId
+        update: {
+          email: profile.emails?.[0]?.value || '',
+          firstName: profile.name?.givenName || '',
+          lastName: profile.name?.familyName || '',
+        },
+        create: {
+          facebookId: profile.id,
+          email: profile.emails?.[0]?.value || '',
+          firstName: profile.name?.givenName || '',
+          lastName: profile.name?.familyName || '',
+          status: 'ACTIVE',
+        },
+        select: { 
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          phoneNumber: true,
+          role: true,
+          status: true
+        },
+      });
 
         // Generate tokens
         const tokens = await generateAuthToken(user.id);

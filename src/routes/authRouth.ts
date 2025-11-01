@@ -14,10 +14,9 @@ authRoute.get(
   passport.authenticate('google', { scope: ['profile', 'email'] })
 );
 
-
 authRoute.get(
   '/facebook',
-  passport.authenticate('facebook', { scope: ['profile', 'email'] })
+  passport.authenticate('facebook', { scope:  ['email', 'public_profile']})
 );
 // Handle callback and return JSON tokens
 authRoute.get(
