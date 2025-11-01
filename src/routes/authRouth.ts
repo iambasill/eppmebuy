@@ -14,6 +14,11 @@ authRoute.get(
   passport.authenticate('google', { scope: ['profile', 'email'] })
 );
 
+
+authRoute.get(
+  '/facebook',
+  passport.authenticate('facebook', { scope: ['profile', 'email'] })
+);
 // Handle callback and return JSON tokens
 authRoute.get(
   '/google/callback',
@@ -39,6 +44,9 @@ authRoute.get(
     });
   }
 );
+
+
+
 
 
 authRoute.post('/login',loginController)

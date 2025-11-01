@@ -52,7 +52,6 @@ passport.use(new FacebookStrategy({
     clientSecret: config.FACEBOOK_APP_SECRET || '',
     callbackURL: config.GOOGLE_CALLBACK_URL || '',
     passReqToCallback: true,
-    profileFields: ['id', 'emails', 'name']
 
 
   },
