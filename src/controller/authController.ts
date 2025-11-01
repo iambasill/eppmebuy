@@ -78,14 +78,12 @@ export const refreshTokenController = async (req: Request, res: Response) => {
   const userSession = await prismaclient.userSession.findFirst({ where: { id: decoded.id, refreshToken:token , loggedOutAt:null }, select: { userId: true } });
   const user:any = await prismaclient.user.findUnique({ where: { id: decoded.id }, select: { id: true ,status:true} });
 
-
   if (!user || user.status === "BLOCKED", !userSession) throw new unAuthorizedError("Invalid refresh token");
 
   const {accessToken, refreshToken} = await generateAuthToken(user.id);
   await createUserSession(user.id, refreshToken, req);
   res.status(200).send({ success: true, accessToken: accessToken, refreshToken:refreshToken});
 };
-
 
 
 /**

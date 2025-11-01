@@ -47,6 +47,6 @@ authRoute.post('/signup',registerController)
 authRoute.post('/reset-password',resetPasswordController)
 authRoute.post('/forgot-password',forgotPasswordController)
 authRoute.post('/change-password',authMiddleware,changePasswordController)
-authRoute.post('/refresh-token',refreshTokenController)
+authRoute.post('/refresh-token', authMiddleware,refreshTokenController)
 
 

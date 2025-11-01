@@ -2,6 +2,7 @@
 import jwt from 'jsonwebtoken';
 import { prismaclient } from '../lib/prisma-postgres';
 import { config } from '../config/envConfig';
+import { BadRequestError } from '../httpClass/exceptions';
 
 export function checkUser(id:string){
     const user = prismaclient.user.findUnique({
@@ -38,7 +39,7 @@ export const verifyToken = async(token: string,type:string="auth") => {
         };
 
         if (!payload || typeof payload !== 'object' || !payload.id) {
-            throw new Error('Invalid token payload');
+            throw new BadRequestError('Invalid or expired token');
         }
 
         return payload;
