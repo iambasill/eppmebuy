@@ -38,9 +38,10 @@ passport.use(
         // Generate tokens
         const tokens = await generateAuthToken(user.id);
         await createUserSession(user.id, tokens.refreshToken, req);
-
+      
+        const { password: _, ...userData } = user; 
         // Attach tokens so callback can access them
-        return done(null, { user, ...tokens });
+        return done(null, { userData, ...tokens });
     }
   )
 );
@@ -78,8 +79,10 @@ passport.use(new FacebookStrategy({
         const tokens = await generateAuthToken(user.id);
         await createUserSession(user.id, tokens.refreshToken, req);
 
+      const { password: _, ...userData } = user; 
+
         // Attach tokens so callback can access them
-        return done(null, { user, ...tokens });
+        return done(null, { userData, ...tokens });
   }
 ));
 
