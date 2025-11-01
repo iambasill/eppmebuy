@@ -25,6 +25,7 @@ const limiter = rateLimit({
   max: 200,
   message:"we has received too many request, please try after 1hr"
 });
+app.set('trust proxy', true);
 app.use('/api',limiter);
 
 const throttle  = slowDown({
