@@ -14,7 +14,10 @@ interface Config {
     DATABASE_URL: string
     GOOGLE_CLIENT_ID: string
     GOOGLE_CLIENT_SECRET: string
-    CALLBACK_URL: string
+    GOOGLE_CALLBACK_URL: string
+    FACEBOOK_APP_ID?: string
+    FACEBOOK_APP_SECRET?: string
+    FACEBOOK_CALLBACK_URL?: string
     PORT: string
 
 
@@ -32,7 +35,10 @@ export const config : Config ={
     DATABASE_URL : process.env.DATABASE_URL!,
     GOOGLE_CLIENT_ID : process.env.GOOGLE_CLIENT_ID!,
     GOOGLE_CLIENT_SECRET : process.env.GOOGLE_CLIENT_SECRET!,
-    CALLBACK_URL : process.env.CALLBACK_URL!,
+    GOOGLE_CALLBACK_URL : process.env.CALLBACK_URL!,
+    FACEBOOK_APP_ID : process.env.FACEBOOK_APP_ID,
+    FACEBOOK_APP_SECRET : process.env.FACEBOOK_APP_SECRET,
+    FACEBOOK_CALLBACK_URL : process.env.FACEBOOK_CALLBACK_URL,
     PORT : process.env.PORT || '5000',
 
 }
