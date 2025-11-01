@@ -10,10 +10,7 @@ export const errorHandler = (err: Error, req: Request, res: Response, next: Next
 
 logger.error(
   JSON.stringify({
-    stack: err.stack,
-    path: req.path,
-    method: req.method,
-    errorMessage: err.message
+    stack: err.stack
   }, null, 2)
 );
 
