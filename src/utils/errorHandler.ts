@@ -8,13 +8,14 @@ import multer from 'multer';
 export const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
   const isProduction = process.env.NODE_ENV === 'production';
 
-  logger.error({
+logger.error(
+  JSON.stringify({
     stack: err.stack,
     path: req.path,
     method: req.method,
-    query: req.query,
     errorMessage: err.message
-  });
+  }, null, 2)
+);
 
 
 
