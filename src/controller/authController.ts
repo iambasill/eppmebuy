@@ -45,10 +45,10 @@ export const registerController = async (req: Request, res: Response, next: Next
 export const loginController = async (req: Request, res: Response) => {
   const { email, password } = loginSchema.parse(req.body);
 
-  const user = await prismaclient.user.findFirst({ where: { email } , select:{id:true,password:true, status:true}});
+  const user = await prismaclient.user.findFirst({ where: { email } , select:{id:true,password:true, status:true, email:true, firstName:true, lastName:true, role:true, phoneNumber:true}});
   if (!user || user.status === 'BLOCKED') throw new BadRequestError("Invalid Credentials");
 
-  const isPasswordValid = await bcrypt.compare(password, user.password);
+  const isPasswordValid = await bcrypt.compare(password, user.password || "password");
   if (!isPasswordValid) throw new BadRequestError("Invalid Credentials");
 
   const { password: _, ...userData } = user; 
@@ -96,7 +96,7 @@ export const changePasswordController = async (req: Request, res: Response) => {
   let user = req.user as User; 
   const { currentPassword, newPassword } = changePasswordSchema.parse(req.body);
 
-  const isOldPasswordValid = await bcrypt.compare(currentPassword, user.password);
+  const isOldPasswordValid = await bcrypt.compare(currentPassword, user.password || "password");
   if (!isOldPasswordValid) throw new BadRequestError("Old password is incorrect");
 
   const hashedNewPassword = await bcrypt.hash(newPassword, 12);
