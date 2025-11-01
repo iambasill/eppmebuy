@@ -40,7 +40,7 @@ export const signupSchema= sanitizeObject(z.object({
 
 export const loginSchema= sanitizeObject(z.object({    
   email: z.string(),                 
-  password: z.string().max(4),              
+  password: z.string().min(4),              
 }))
 
 export const refreshTokenSchema= sanitizeObject(z.object({    

@@ -15,7 +15,7 @@ import { User, UserRole } from "../../generated/prisma";
  */
 export const registerController = async (req: Request, res: Response, next: NextFunction) => {
   const validatedData = signupSchema.parse(req.body);
-  const { email, firstName, lastName, phoneNumber } = validatedData;
+  const { email, firstName, lastName, phoneNumber,password } = validatedData;
   const userRole: UserRole = (validatedData.role ?? "ATTENDEE") as UserRole;
 
   const existingUser = await prismaclient.user.findFirst({ where: { email } });
@@ -23,8 +23,8 @@ export const registerController = async (req: Request, res: Response, next: Next
     throw new BadRequestError('User already exists');
   }
 
-  const hashedPassword = await bcrypt.hash("password", 12);
-  const user = await prismaclient.user.create({
+  const hashedPassword = await bcrypt.hash( password, 12);
+   await prismaclient.user.create({
     data: { email, firstName, lastName, role: userRole, password: hashedPassword, phoneNumber }
   });
 
