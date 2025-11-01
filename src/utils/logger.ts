@@ -20,7 +20,7 @@ const consoleFormat = printf(({ level, message, timestamp, stack }) => {
 
 // Create logger instance
 const logger = winston.createLogger({
-  level: 'http', // This is important for Morgan logs
+  level: 'error', // This is important for Morgan logs
   format: combine(
     timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
     json(),

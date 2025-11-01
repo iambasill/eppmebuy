@@ -9,7 +9,6 @@ export const errorHandler = (err: Error, req: Request, res: Response, next: Next
   const isProduction = process.env.NODE_ENV === 'production';
 
   logger.error({
-    message: err.message,
     stack: err.stack,
     path: req.path,
     method: req.method,
