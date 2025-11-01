@@ -6,6 +6,7 @@ import { morganMiddleware } from './utils/logger';
 import rateLimit from 'express-rate-limit';
 import slowDown from 'express-slow-down';
 import { config } from './config/envConfig';
+import passport from 'passport';
 
 const app = express()
 
@@ -40,6 +41,7 @@ app.use(morganMiddleware);
 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(passport.initialize());
 app.use('/', rootRoute)
 
 
