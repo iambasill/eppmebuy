@@ -58,7 +58,7 @@ passport.use(new FacebookStrategy({
     clientID: config.FACEBOOK_APP_ID || '',
     clientSecret: config.FACEBOOK_APP_SECRET || '',
     callbackURL: config.FACEBOOK_CALLBACK_URL || '', // Fixed: Use Facebook callback URL
-    profileFields: ['id', 'emails', 'name', 'displayName'], // Required for Facebook
+    profileFields: ['id',  'name', 'displayName'], // Required for Facebook
     passReqToCallback: true,
   },
   async (req, accessToken, refreshToken, profile, done) => {
