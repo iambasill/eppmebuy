@@ -30,18 +30,24 @@ passport.use(
             lastName: profile.name?.familyName || '',
             status: 'ACTIVE',
             emailVerified: true,
-
-
           },
+            select: { 
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phoneNumber: true,
+            role: true,
+            status: true
+           },
         });
 
         // Generate tokens
         const tokens = await generateAuthToken(user.id);
         await createUserSession(user.id, tokens.refreshToken, req);
       
-        const { password: _, ...userData } = user; 
         // Attach tokens so callback can access them
-        return done(null, { userData, ...tokens });
+        return done(null, { user, ...tokens });
     }
   )
 );
@@ -70,19 +76,26 @@ passport.use(new FacebookStrategy({
             firstName: profile.name?.givenName || '',
             lastName: profile.name?.familyName || '',
             status: 'ACTIVE',
-
-
           },
+          select: { 
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phoneNumber: true,
+            role: true,
+            status: true
+           },
+
         });
 
         // Generate tokens
         const tokens = await generateAuthToken(user.id);
         await createUserSession(user.id, tokens.refreshToken, req);
 
-      const { password: _, ...userData } = user; 
 
         // Attach tokens so callback can access them
-        return done(null, { userData, ...tokens });
+        return done(null, { user, ...tokens });
   }
 ));
 
