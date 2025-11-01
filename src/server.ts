@@ -20,21 +20,20 @@ app.use(cors(
 ));
 
 // Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200,
-  message:"we has received too many request, please try after 1hr"
-});
-app.set('trust proxy', true);
-app.use('/api',limiter);
+// const limiter = rateLimit({
+//   windowMs: 15 * 60 * 1000, // 15 minutes
+//   max: 200,
+//   message:"we has received too many request, please try after 1hr"
+// });
+// app.use('/api',limiter);
 
-const throttle  = slowDown({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  delayAfter: 100, // allow 100 requests per 15 minutes, then...
-  delayMs: () => 500 // begin adding 500ms of delay per request above 100:
-});
+// const throttle  = slowDown({
+//   windowMs: 15 * 60 * 1000, // 15 minutes
+//   delayAfter: 100, // allow 100 requests per 15 minutes, then...
+//   delayMs: () => 500 // begin adding 500ms of delay per request above 100:
+// });
 
-app.use('/api',throttle)
+// app.use('/api',throttle)
 app.use(morganMiddleware);
 
 
