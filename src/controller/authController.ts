@@ -172,7 +172,7 @@ export const resetPasswordController = async (req: Request, res: Response) => {
     , resetToken: resetToken
     }
   });
-  if (!user) throw new BadRequestError("User does not exist");
+  if (!user) throw new BadRequestError("Invalid or expired reset token");
 
   if (user.resetToken !== resetToken) throw new BadRequestError("Invalid or expired reset token");
 
