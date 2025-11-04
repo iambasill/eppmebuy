@@ -1,5 +1,5 @@
 import express from 'express'
-import { changePasswordController, forgotPasswordController, loginController, refreshTokenController, registerController, resetPasswordController} from '../controller/authController'
+import { changePasswordController, forgotPasswordController, loginController, refreshTokenController, registerController, resetPasswordController, verifyResetTokenController} from '../controller/authController'
 import { authMiddleware } from '../middlewares/authMiddleware'
 import passport from 'passport'
 
@@ -52,6 +52,7 @@ authRoute.post('/login',loginController)
 authRoute.post('/signup',registerController)
 
 authRoute.post('/reset-password',resetPasswordController)
+authRoute.post('/verify-otp',verifyResetTokenController)
 authRoute.post('/forgot-password',forgotPasswordController)
 authRoute.post('/change-password',authMiddleware,changePasswordController)
 authRoute.post('/refresh-token', authMiddleware,refreshTokenController)

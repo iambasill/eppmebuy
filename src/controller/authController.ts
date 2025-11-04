@@ -1,10 +1,11 @@
 import express, { Request, Response, NextFunction } from "express";
 import { BadRequestError, unAuthorizedError } from "../httpClass/exceptions";
-import { signupSchema, loginSchema, changePasswordSchema, refreshTokenSchema, forgotPasswordSchema, resetPasswordSchema } from "../schema/authSchema";
+import { signupSchema, loginSchema, changePasswordSchema, refreshTokenSchema, forgotPasswordSchema, resetPasswordSchema, verifyOtpSchema } from "../schema/authSchema";
 import bcrypt from 'bcrypt';
 import { prismaclient } from "../lib/prisma-postgres";
 import { createUserSession, generateAuthToken, generateToken, verifyToken } from "../utils/func";
 import { User, UserRole } from "../../generated/prisma";
+import { generateOtp, verifyOtp } from "../config/otpHandler";
 
 
 
@@ -117,7 +118,7 @@ export const forgotPasswordController = async (req: Request, res: Response) => {
   const user = await prismaclient.user.findFirst({ where: { OR: [ { email }, { phoneNumber } ] } });
   if (!user) throw new BadRequestError("User with this email does not exist");
 
-  const resetToken = await generateToken(user.id);
+  const resetToken = await generateOtp();
 
   await prismaclient.user.update({
     where: { id: user.id },
@@ -125,27 +126,41 @@ export const forgotPasswordController = async (req: Request, res: Response) => {
   });
 
   // await sendPasswordResetEmail(email, resetToken); // Implement this in `emailService.ts`
-
-  res.status(200).send({ success: true, message: "Password reset link sent to email" });
+//TODO: REMOVE
+  res.status(200).send({ success: true, token:resetToken });
 };
 
+
+
+/**
+ * verify token.
+ */
+
+export const verifyResetTokenController = async (req: Request, res: Response) => {
+  const { otp } = verifyOtpSchema.parse(req.body);    
+  const user = await prismaclient.user.findFirst({
+    where: {
+      resetToken: otp,
+    }
+  });
+  if (!user) throw new BadRequestError("Invalid or expired token");
+
+  const validToken = await verifyOtp(otp);
+  if (!validToken) throw new BadRequestError("Invalid or expired token");
+  res.status(200).send({ success: true, message: "Token is valid" });
+};
 
 
 /**
  * Reset password using a valid token.
  */
 export const resetPasswordController = async (req: Request, res: Response) => {
-  const { resetToken, newPassword } = resetPasswordSchema.parse(req.body);
+  const { email, phoneNumber, newPassword } = resetPasswordSchema.parse(req.body);
 
-  const user = await prismaclient.user.findFirst({
-    where: {
-      resetToken: resetToken,
-    }
-  });
 
-  if (!user) throw new BadRequestError("Invalid or expired token");
+  const user = await prismaclient.user.findFirst({ where: { OR: [ { email }, { phoneNumber } ] } });
+  if (!user) throw new BadRequestError("User with this email does not exist");
 
-  await verifyToken(resetToken, "reset");
 
   const hashedPassword = await bcrypt.hash(newPassword, 12);
   await prismaclient.user.update({
@@ -155,5 +170,7 @@ export const resetPasswordController = async (req: Request, res: Response) => {
 
   res.status(200).send({ success: true, message: "Password reset successful" });
 };
+
+
 
 // ====================== END CONTROLLERS ====================== //

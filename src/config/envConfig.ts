@@ -18,6 +18,7 @@ interface Config {
     FACEBOOK_APP_ID?: string
     FACEBOOK_APP_SECRET?: string
     FACEBOOK_CALLBACK_URL?: string
+    OTP_SECRET: string
     PORT: string
 
 
@@ -39,6 +40,7 @@ export const config : Config ={
     FACEBOOK_APP_ID : process.env.FACEBOOK_APP_ID,
     FACEBOOK_APP_SECRET : process.env.FACEBOOK_APP_SECRET,
     FACEBOOK_CALLBACK_URL : process.env.FACEBOOK_CALLBACK_URL,
+    OTP_SECRET : process.env.OTP_SECRET!,
     PORT : process.env.PORT || '5000',
 
 }
