@@ -6,6 +6,7 @@ import { prismaclient } from "../lib/prisma-postgres";
 import { createUserSession, generateAuthToken, generateToken, verifyToken } from "../utils/func";
 import { User, UserRole } from "../../generated/prisma";
 import { generateOtp, verifyOtp } from "../config/otpHandler";
+import { length } from "zod";
 
 
 
@@ -137,17 +138,21 @@ export const forgotPasswordController = async (req: Request, res: Response) => {
  */
 
 export const verifyResetTokenController = async (req: Request, res: Response) => {
-  const { email, phoneNumber, resetToken="" } = resetPasswordSchema.parse(req.body);
+  const { email, phoneNumber, resetToken } = resetPasswordSchema.parse(req.body);
+
+  if (!resetToken) throw new BadRequestError("Invalid or expired token");
+
   const user = await prismaclient.user.findFirst({
     where: {
-      resetToken,
       OR: [ { email }, { phoneNumber } ]
+    , resetToken: resetToken
     }
   });
   if (!user) throw new BadRequestError("Invalid or expired token");
 
   const validToken = await verifyOtp(resetToken);
   if (!validToken) throw new BadRequestError("Invalid or expired token");
+
   res.status(200).send({ success: true, message: "Token is valid" });
 };
 
@@ -156,7 +161,10 @@ export const verifyResetTokenController = async (req: Request, res: Response) =>
  * Reset password using a valid token.
  */
 export const resetPasswordController = async (req: Request, res: Response) => {
-  const { email, phoneNumber, newPassword="", resetToken } = resetPasswordSchema.parse(req.body);
+  const { email, phoneNumber, newPassword, resetToken } = resetPasswordSchema.parse(req.body);
+
+  if (!resetToken || !newPassword || newPassword.length < 3 ) throw new BadRequestError("Invalid password reset request");
+
 
 
   const user = await prismaclient.user.findFirst({ where: { OR: [ { email }, { phoneNumber } ] } });
