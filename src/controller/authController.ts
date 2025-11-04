@@ -160,12 +160,15 @@ export const resetPasswordController = async (req: Request, res: Response) => {
 
 
   const user = await prismaclient.user.findFirst({ where: { OR: [ { email }, { phoneNumber } ] } });
-  if (!user) throw new BadRequestError("User with this email does not exist");
+  if (!user) throw new BadRequestError("User does not exist");
+
+  if (user.resetToken !== resetToken) throw new BadRequestError("Invalid or expired reset token");
+
 
 
   const hashedPassword = await bcrypt.hash(newPassword, 12);
   await prismaclient.user.update({
-    where: { id: user.id , resetToken},
+    where: { id: user.id },
     data: { password: hashedPassword, resetToken: null }
   });
 
