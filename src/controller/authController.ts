@@ -166,8 +166,12 @@ export const resetPasswordController = async (req: Request, res: Response) => {
   if (!resetToken || !newPassword || newPassword.length < 3 ) throw new BadRequestError("Invalid password reset request");
 
 
-
-  const user = await prismaclient.user.findFirst({ where: { OR: [ { email }, { phoneNumber } ] } });
+  const user = await prismaclient.user.findFirst({
+    where: {
+      OR: [ { email }, { phoneNumber } ]
+    , resetToken: resetToken
+    }
+  });
   if (!user) throw new BadRequestError("User does not exist");
 
   if (user.resetToken !== resetToken) throw new BadRequestError("Invalid or expired reset token");
