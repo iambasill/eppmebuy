@@ -143,7 +143,7 @@ model User {
   password              String?    // Hashed
   googleId             String?   @unique @map("google_id")
   facebookId           String?   @unique @map("facebook_id")
-  otp                   String? @map("otp")
+  otp                  String?    @map("otp")
 
   
   role                  UserRole  @default(ATTENDEE)
