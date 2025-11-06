@@ -136,13 +136,15 @@ model User {
   // Basic Information
   firstName             String    @map("first_name")
   lastName              String    @map("last_name")
-  email                 String    @unique
+  email                 String?    @unique
   emailVerified         Boolean   @default(false) @map("email_verified")
   phoneNumber           String?    @map("phone_number")
   phoneVerified         Boolean   @default(false) @map("phone_verified")
   password              String?    // Hashed
   googleId             String?   @unique @map("google_id")
   facebookId           String?   @unique @map("facebook_id")
+  otp                   String? @map("otp")
+
   
   role                  UserRole  @default(ATTENDEE)
   status                String    @default("ACTIVE") // ACTIVE, BLOCKED, SUSPENDED

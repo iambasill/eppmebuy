@@ -57,13 +57,16 @@ passport.use(
 passport.use(new FacebookStrategy({
     clientID: config.FACEBOOK_APP_ID || '',
     clientSecret: config.FACEBOOK_APP_SECRET || '',
-    callbackURL: config.FACEBOOK_CALLBACK_URL || '', // Fixed: Use Facebook callback URL
-    profileFields: ['id',  'name', 'displayName'], // Required for Facebook
+    callbackURL: config.FACEBOOK_CALLBACK_URL || '', // Fixed
     passReqToCallback: true,
+    profileFields: ['id', 'emails', 'name', 'displayName'], // Add required profile fields
+    scope: ['email', 'public_profile'] // Correct Facebook scopes
   },
   async (req, accessToken, refreshToken, profile, done) => {
+    try {
+      // Fixed: Use facebookId instead of googleId
       const user = await prismaclient.user.upsert({
-        where: { facebookId: profile.id }, // Fixed: Use facebookId instead of googleId
+        where: { facebookId: profile.id },
         update: {
           email: profile.emails?.[0]?.value || '',
           firstName: profile.name?.givenName || '',
@@ -87,15 +90,18 @@ passport.use(new FacebookStrategy({
         },
       });
 
-        // Generate tokens
-        const tokens = await generateAuthToken(user.id);
-        await createUserSession(user.id, tokens.refreshToken, req);
+      // Generate tokens
+      const tokens = await generateAuthToken(user.id);
+      await createUserSession(user.id, tokens.refreshToken, req);
 
-
-        // Attach tokens so callback can access them
-        return done(null, { user, ...tokens });
+      // Attach tokens so callback can access them
+      return done(null, { user, ...tokens });
+    } catch (error) {
+      return done(error, null);
+    }
   }
 ));
+
 
 passport.serializeUser((data: any, done: (err: any, id?: any) => void) => done(null, data as any));
 passport.deserializeUser((data: any, done: (err: any, user?: any) => void) => done(null, data as any));
