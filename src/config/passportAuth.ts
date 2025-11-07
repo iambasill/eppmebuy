@@ -4,6 +4,7 @@ import { config } from './envConfig';
 import { prismaclient } from '../lib/prisma-postgres';
 import { createUserSession, generateAuthToken } from '../utils/func';
 import { Strategy as FacebookStrategy } from 'passport-facebook';
+
 passport.use(
   new GoogleStrategy(
     {
@@ -27,14 +28,15 @@ async (req, accessToken, refreshToken, profile, done) => {
         ]
       },
       select: { 
-        id: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-        phoneNumber: true,
-        role: true,
-        status: true,
-        googleId: true
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phoneNumber: true,
+            role: true,
+            status: true,
+            googleId: true
+
       },
     });
 
@@ -46,8 +48,7 @@ async (req, accessToken, refreshToken, profile, done) => {
           data: {
             googleId: profileId,
             emailVerified: true,
-            firstName: user.firstName || profile.name?.givenName || '',
-            lastName: user.lastName || profile.name?.familyName || '',
+
           },
           select: { 
             id: true,
@@ -60,7 +61,7 @@ async (req, accessToken, refreshToken, profile, done) => {
             googleId: true
           },
         });
-    } else {
+    } else if (!user) {
       // Create new user
       user = await prismaclient.user.create({
         data: {
