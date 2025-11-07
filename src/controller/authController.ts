@@ -1,5 +1,5 @@
 import express, { Request, Response, NextFunction } from "express";
-import { BadRequestError, unAuthorizedError } from "../httpClass/exceptions";
+import { BadRequestError, unAuthorizedError } from "../logger/exceptions";
 import { signupSchema, loginSchema, changePasswordSchema, refreshTokenSchema, forgotPasswordSchema, resetPasswordSchema, verifyOtpSchema } from "../schema/authSchema";
 import bcrypt from 'bcrypt';
 import { prismaclient } from "../lib/prisma-postgres";

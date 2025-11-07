@@ -2,7 +2,7 @@
 import jwt from 'jsonwebtoken';
 import { prismaclient } from '../lib/prisma-postgres';
 import { config } from '../config/envConfig';
-import { BadRequestError } from '../httpClass/exceptions';
+import { BadRequestError } from '../logger/exceptions';
 
 export function checkUser(id:string){
     const user = prismaclient.user.findUnique({

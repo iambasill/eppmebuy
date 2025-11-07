@@ -138,6 +138,7 @@ model User {
   lastName              String    @map("last_name")
   email                 String?    @unique
   emailVerified         Boolean   @default(false) @map("email_verified")
+
   phoneNumber           String?    @map("phone_number")
   phoneVerified         Boolean   @default(false) @map("phone_verified")
   password              String?    // Hashed
@@ -243,11 +244,11 @@ model Event {
   
   // Basic Info
   title                 String
-  slug                  String            @unique
+  slug                  String?            @unique
   description           String            @db.Text
   coverImages           String[]          @map("cover_images")
-  category              EventCategory
-  tags                  String[]
+  category               EventCategory
+  tags                  String[]          @map("tags")
   
   // Timing
   startDateTime         DateTime          @map("start_datetime")
@@ -259,29 +260,24 @@ model Event {
   streamingUrl          String?           @map("streaming_url")
   venueName             String            @map("venue_name")
   venueAddress          String            @map("venue_address")
-  city                  String
+  city                  String?
   state                 String?
   country               String
   latitude              Float?
   longitude             Float?
   
   // Capacity & Access
-  totalCapacity         Int               @map("total_capacity")
-  accessType            EventAccessType   @default(PUBLIC) @map("access_type")
+  totalCapacity         Int?               @map("total_capacity")
+  accessType            EventAccessType   @default(INVITE_ONLY) @map("access_type")
   ageRestriction        Int?              @map("age_restriction") // Minimum age
-  guestList             String[]          @map("guest_list") // Email list for invite-only
   
   // Pricing & Fees
-  currency              String            @default("USD")
-  hostFeePercent        Decimal?          @map("host_fee_percent") @db.Decimal(5, 2)
-  hostFeeFixed          Decimal?          @map("host_fee_fixed") @db.Decimal(10, 2)
-  platformFeePercent    Decimal           @map("platform_fee_percent") @db.Decimal(5, 2)
-  platformFeeFixed      Decimal?          @map("platform_fee_fixed") @db.Decimal(10, 2)
-  taxRate               Decimal?          @map("tax_rate") @db.Decimal(5, 2)
+  vipFee        Decimal?          @map("vip_fee") @db.Decimal(5, 2)
+  economyFee          Decimal?          @map("host_fee_fixed") @db.Decimal(10, 2)
+
   
   // Ticketing Settings
   ticketLimitPerOrder   Int               @default(10) @map("ticket_limit_per_order")
-  requiresDelivery      Boolean           @default(false) @map("requires_delivery")
   
   // Check-in Settings
   checkInMethod         CheckInMethod     @default(QR_SCAN) @map("checkin_method")

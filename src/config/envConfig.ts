@@ -1,6 +1,6 @@
 
 import dotenv from 'dotenv'
-import { BadRequestError } from '../httpClass/exceptions'
+import { BadRequestError } from '../logger/exceptions'
 dotenv.config({path:'.env'})
 
 interface Config {
