@@ -14,71 +14,62 @@ passport.use(
     },
 
     
-    async (req, accessToken, refreshToken, profile, done) => {
-        // Create or update user
-        let user = await prismaclient.user.upsert({
-          where: { googleId: profile.id },
-          update: {
-            email: profile.emails?.[0]?.value || '',
-            firstName: profile.name?.givenName || '',
-            lastName: profile.name?.familyName || '',
-          },
-          create: {
-            googleId: profile.id,
-            email: profile.emails?.[0]?.value || '',
-            firstName: profile.name?.givenName || '',
-            lastName: profile.name?.familyName || '',
-            status: 'ACTIVE',
+async (req, accessToken, refreshToken, profile, done) => {
+    const profileId = profile.id;
+    const email = profile.emails?.[0]?.value;
+    
+    // First, try to find user by googleId OR email
+    let user = await prismaclient.user.findFirst({
+      where: {
+        OR: [
+          { googleId: profileId },
+          { email: email }
+        ]
+      },
+      select: { 
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phoneNumber: true,
+        role: true,
+        status: true,
+        googleId: true
+      },
+    });
+
+    if (user && !user.googleId) {
+      // Update existing user with Google info if needed
+    
+        user = await prismaclient.user.update({
+          where: { id: user.id },
+          data: {
+            googleId: profileId,
             emailVerified: true,
+            firstName: user.firstName || profile.name?.givenName || '',
+            lastName: user.lastName || profile.name?.familyName || '',
           },
-            select: { 
+          select: { 
             id: true,
             firstName: true,
             lastName: true,
             email: true,
             phoneNumber: true,
             role: true,
-            status: true
-           },
+            status: true,
+            googleId: true
+          },
         });
-
-        // Generate tokens
-        const tokens = await generateAuthToken(user.id);
-        await createUserSession(user.id, tokens.refreshToken, req);
-      
-        const {id, ...userData} = user
-        // Attach tokens so callback can access them
-        return done(null, { userData, ...tokens });
-    }
-  )
-);
-
-
-
-passport.use(new FacebookStrategy({
-    clientID: config.FACEBOOK_APP_ID || '',
-    clientSecret: config.FACEBOOK_APP_SECRET || '',
-    callbackURL: config.FACEBOOK_CALLBACK_URL || '', // Fixed
-    passReqToCallback: true,
-    profileFields: ['id', 'emails', 'name', 'displayName'], // Add required profile fields
-    scope: ['email', 'public_profile'] // Correct Facebook scopes
-  },
-  async (req, accessToken, refreshToken, profile, done) => {
-    try {
-      // Fixed: Use facebookId instead of googleId
-      let user = await prismaclient.user.upsert({
-        where: { facebookId: profile.id },
-        update: {
-          email: profile.emails?.[0]?.value || '',
-          firstName: profile.name?.givenName || '',
-          lastName: profile.name?.familyName || '',
-        },
-        create: {
-          facebookId: profile.id,
-          email: profile.emails?.[0]?.value || '',
+    } else {
+      // Create new user
+      user = await prismaclient.user.create({
+        data: {
+          googleId: profileId,
+          email: email,
           firstName: profile.name?.givenName || '',
           lastName: profile.name?.familyName || '',
           status: 'ACTIVE',
+          emailVerified: true,
         },
         select: { 
           id: true,
@@ -87,23 +78,113 @@ passport.use(new FacebookStrategy({
           email: true,
           phoneNumber: true,
           role: true,
-          status: true
+          status: true,
+          googleId:true
         },
       });
-
-      // Generate tokens
-      const tokens = await generateAuthToken(user.id);
-      await createUserSession(user.id, tokens.refreshToken, req);
-      const {id , ...userData} = user
-
-      // Attach tokens so callback can access them
-      return done(null, { userData, ...tokens });
-    } catch (error) {
-      return done(error, null);
     }
-  }
-));
 
+    // Generate tokens
+    const tokens = await generateAuthToken(user.id);
+    await createUserSession(user.id, tokens.refreshToken, req);
+  
+    const {id,googleId, ...userData} = user;
+    return done(null, { userData, ...tokens });
+}
+  )
+);
+
+
+
+// passport.use(new FacebookStrategy({
+//     clientID: config.FACEBOOK_APP_ID || '',
+//     clientSecret: config.FACEBOOK_APP_SECRET || '',
+//     callbackURL: config.FACEBOOK_CALLBACK_URL || '',
+//     passReqToCallback: true,
+//     profileFields: ['id', 'emails', 'name', 'displayName'],
+//     scope: ['email', 'public_profile']
+//   },
+
+//   async (req, accessToken, refreshToken, profile, done) => {
+//     const profileId = profile.id;
+//     const email = profile.emails?.[0]?.value ;
+    
+//     // First, try to find user by facebookId OR email
+//     let user = await prismaclient.user.findFirst({
+//       where: {
+//         OR: [
+//           { facebookId: profileId },
+//           { email: email }
+//         ]
+//       },
+//       select: { 
+//         id: true,
+//         firstName: true,
+//         lastName: true,
+//         email: true,
+//         phoneNumber: true,
+//         role: true,
+//         status: true,
+//         facebookId: true
+//       },
+//     });
+
+//     if (user) {
+//       // Update existing user with Facebook info if needed
+//       if (!user.facebookId) {
+//         user = await prismaclient.user.update({
+//           where: { id: user.id },
+//           data: {
+//             facebookId: profileId,  // ✅ FIXED: Now using facebookId
+//             emailVerified: true,
+//             firstName: user.firstName || profile.name?.givenName || '',
+//             lastName: user.lastName || profile.name?.familyName || '',
+//           },
+//           select: { 
+//             id: true,
+//             firstName: true,
+//             lastName: true,
+//             email: true,
+//             phoneNumber: true,
+//             role: true,
+//             status: true,
+//             facebookId: true
+//           },
+//         });
+//       }
+//       // ✅ FIXED: If user already has facebookId, we just use existing user
+//     } else {
+//       // Create new user
+//       user = await prismaclient.user.create({
+//         data: {
+//           facebookId: profileId,  
+//           email: email,
+//           firstName: profile.name?.givenName || '',
+//           lastName: profile.name?.familyName || '',
+//           status: 'ACTIVE',
+//           emailVerified: true,
+//         },
+//         select: { 
+//           id: true,
+//           firstName: true,
+//           lastName: true,
+//           email: true,
+//           phoneNumber: true,
+//           role: true,
+//           status: true,
+//           facebookId: true
+//         },
+//       });
+//     }
+
+//     // Generate tokens
+//     const tokens = await generateAuthToken(user.id);
+//     await createUserSession(user.id, tokens.refreshToken, req);
+  
+//     const {id, facebookId, ...userData} = user;
+//     return done(null, { userData, ...tokens });
+// }
+// ));
 
 passport.serializeUser((data: any, done: (err: any, id?: any) => void) => done(null, data as any));
 passport.deserializeUser((data: any, done: (err: any, user?: any) => void) => done(null, data as any));
