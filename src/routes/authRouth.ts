@@ -1,39 +1,50 @@
 import express from 'express'
-import { changePasswordController, forgotPasswordController, loginController, refreshTokenController, registerController, resetPasswordController, verifyResetTokenController} from '../controller/authController'
+import { 
+  changePasswordController, 
+  forgotPasswordController, 
+  loginController, 
+  refreshTokenController, 
+  registerController, 
+  resetPasswordController, 
+  verifyResetTokenController
+} from '../controller/authController'
 import { authMiddleware } from '../middlewares/authMiddleware'
 import passport from '../config/passportAuth'
 
 export const authRoute = express.Router()
+
+// Frontend redirect URLs (configure these based on your environment)
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000'
+const AUTH_SUCCESS_REDIRECT = `${FRONTEND_URL}/auth/success`
+const AUTH_FAILURE_REDIRECT = `${FRONTEND_URL}/auth/failure`
 
 // Test route
 authRoute.get('/', (req, res) => {
   return res.json({ message: "Auth service is running" })
 })
 
-// Updated Google OAuth with account switching support
+// Google OAuth initiation - with account switching support
 authRoute.get(
   '/google',
   (req, res, next) => {
-    const state = req.query.state || Date.now().toString();
+    const state = req.query.state as string || Date.now().toString();
+    const prompt = req.query.prompt as string || 'consent';
     
-    // Use any to bypass TypeScript issues with passport options
-    const authenticate = passport.authenticate('google', {
+    passport.authenticate('google', {
       scope: ['profile', 'email', 'openid'],
       session: false,
       accessType: 'offline',
-      prompt: req.query.prompt || 'select_account',
+      prompt: prompt,
       state: state
-    } as any); // Add 'as any' to fix TypeScript issues
-    
-    authenticate(req, res, next);
+    })(req, res, next);
   }
 );
 
 // Specific endpoint for switching accounts
 authRoute.get('/google/switch', (req, res) => {
   const state = Date.now().toString();
-  const redirectUrl = `/auth/google?prompt=select_account&state=${state}`;
-  res.redirect(redirectUrl);
+  // Redirect to the main Google auth route with select_account prompt
+  res.redirect(`/auth/google?prompt=select_account&state=${state}`);
 });
 
 // Google callback route
@@ -43,32 +54,44 @@ authRoute.get(
     passport.authenticate('google', { 
       session: false,
       failureRedirect: '/auth/failure'
-    } as any)(req, res, next); // Add 'as any' here too
+    }, (err: any, user: any, info: any) => {
+      // Custom callback handler for better error control
+      if (err) {
+        console.error('Google OAuth Error:', err);
+        return res.redirect(`${AUTH_FAILURE_REDIRECT}?error=server_error&message=${encodeURIComponent(err.message)}`);
+      }
+      
+      if (!user) {
+        const message = info?.message || 'Authentication failed';
+        return res.redirect(`${AUTH_FAILURE_REDIRECT}?error=auth_failed&message=${encodeURIComponent(message)}`);
+      }
+      
+      // Attach user to request for next handler
+      req.user = user;
+      next();
+    })(req, res, next);
   },
   (req, res) => {
     try {
       if (!req.user) {
-        return res.status(401).json({
-          success: false,
-          message: 'Authentication failed - no user data'
-        });
+        return res.redirect(`${AUTH_FAILURE_REDIRECT}?error=no_user_data`);
       }
 
       const { userData, accessToken, refreshToken } = req.user as any;
 
-      return res.status(200).json({
-        success: true,
-        message: 'Google login successful',
-        userData,
-        accessToken,
-        refreshToken
+      // Encode tokens for URL safety
+      const params = new URLSearchParams({
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+        userData: JSON.stringify(userData)
       });
 
+      // Redirect to frontend with tokens
+      return res.redirect(`${AUTH_SUCCESS_REDIRECT}?${params.toString()}`);
+
     } catch (error) {
-      return res.status(500).json({
-        success: false,
-        message: 'Authentication processing failed'
-      });
+      console.error('Callback processing error:', error);
+      return res.redirect(`${AUTH_FAILURE_REDIRECT}?error=processing_failed`);
     }
   }
 );
@@ -77,10 +100,13 @@ authRoute.get(
 authRoute.get(
   '/facebook',
   (req, res, next) => {
+    const state = req.query.state as string || Date.now().toString();
+    
     passport.authenticate('facebook', { 
       scope: ['email', 'public_profile'],
-      session: false 
-    } as any)(req, res, next);
+      session: false,
+      state: state
+    })(req, res, next);
   }
 );
 
@@ -90,43 +116,60 @@ authRoute.get(
     passport.authenticate('facebook', { 
       session: false,
       failureRedirect: '/auth/failure'
-    } as any)(req, res, next);
+    }, (err: any, user: any, info: any) => {
+      if (err) {
+        console.error('Facebook OAuth Error:', err);
+        return res.redirect(`${AUTH_FAILURE_REDIRECT}?error=server_error&message=${encodeURIComponent(err.message)}`);
+      }
+      
+      if (!user) {
+        const message = info?.message || 'Facebook authentication failed';
+        return res.redirect(`${AUTH_FAILURE_REDIRECT}?error=auth_failed&message=${encodeURIComponent(message)}`);
+      }
+      
+      req.user = user;
+      next();
+    })(req, res, next);
   },
   (req, res) => {
     try {
       if (!req.user) {
-        return res.status(401).json({
-          success: false,
-          message: 'Facebook authentication failed'
-        });
+        return res.redirect(`${AUTH_FAILURE_REDIRECT}?error=no_user_data`);
       }
 
       const { userData, accessToken, refreshToken } = req.user as any;
 
-      return res.status(200).json({
-        success: true,
-        message: 'Facebook login successful',
-        userData,
-        accessToken,
-        refreshToken
+      const params = new URLSearchParams({
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+        userData: JSON.stringify(userData)
       });
 
+      return res.redirect(`${AUTH_SUCCESS_REDIRECT}?${params.toString()}`);
+
     } catch (error) {
-      return res.status(500).json({
-        success: false,
-        message: 'Facebook authentication processing failed'
-      });
+      console.error('Facebook callback processing error:', error);
+      return res.redirect(`${AUTH_FAILURE_REDIRECT}?error=processing_failed`);
     }
   }
 );
 
-// Auth failure handler
+// Auth failure handler (can be used as fallback or for API responses)
 authRoute.get('/failure', (req, res) => {
-  return res.status(401).json({
-    success: false,
-    message: 'Authentication failed',
-    error: req.query.error
-  });
+  const error = req.query.error || 'unknown_error';
+  const message = req.query.message || 'Authentication failed';
+  
+  // If this is an API call (check Accept header), return JSON
+  if (req.headers.accept?.includes('application/json')) {
+    return res.status(401).json({
+      success: false,
+      message: message,
+      error: error
+    });
+  }
+  
+  // Otherwise redirect to frontend failure page
+  return res.redirect(`${AUTH_FAILURE_REDIRECT}?error=${error}&message=${encodeURIComponent(message as string)}`);
 });
 
 // Existing auth routes
