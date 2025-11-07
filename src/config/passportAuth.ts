@@ -16,7 +16,7 @@ passport.use(
     
     async (req, accessToken, refreshToken, profile, done) => {
         // Create or update user
-        const user = await prismaclient.user.upsert({
+        let user = await prismaclient.user.upsert({
           where: { googleId: profile.id },
           update: {
             email: profile.emails?.[0]?.value || '',
@@ -46,8 +46,9 @@ passport.use(
         const tokens = await generateAuthToken(user.id);
         await createUserSession(user.id, tokens.refreshToken, req);
       
+        const {id, ...userData} = user
         // Attach tokens so callback can access them
-        return done(null, { user, ...tokens });
+        return done(null, { userData, ...tokens });
     }
   )
 );
@@ -65,7 +66,7 @@ passport.use(new FacebookStrategy({
   async (req, accessToken, refreshToken, profile, done) => {
     try {
       // Fixed: Use facebookId instead of googleId
-      const user = await prismaclient.user.upsert({
+      let user = await prismaclient.user.upsert({
         where: { facebookId: profile.id },
         update: {
           email: profile.emails?.[0]?.value || '',
@@ -93,9 +94,10 @@ passport.use(new FacebookStrategy({
       // Generate tokens
       const tokens = await generateAuthToken(user.id);
       await createUserSession(user.id, tokens.refreshToken, req);
+      const {id , ...userData} = user
 
       // Attach tokens so callback can access them
-      return done(null, { user, ...tokens });
+      return done(null, { userData, ...tokens });
     } catch (error) {
       return done(error, null);
     }
