@@ -1,11 +1,11 @@
-import express from 'express'
+import express , {Request, Response, NextFunction} from 'express'
 import { changePasswordController, forgotPasswordController, loginController, refreshTokenController, registerController, resetPasswordController, verifyResetTokenController} from '../controller/authController'
 import { authMiddleware } from '../middlewares/authMiddleware'
 import passport from '../config/passportAuth'
 
 export const authRoute = express.Router() // Use Router() instead of express()
 
-authRoute.get('/', () => {
+authRoute.get('/', (req:Request, res:Response) => {
   return res.json({ message: "hello" })
 })
 
