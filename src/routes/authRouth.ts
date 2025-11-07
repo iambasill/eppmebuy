@@ -1,51 +1,53 @@
-import express , {Request, Response, NextFunction} from 'express'
+import express from 'express'
 import { changePasswordController, forgotPasswordController, loginController, refreshTokenController, registerController, resetPasswordController, verifyResetTokenController} from '../controller/authController'
 import { authMiddleware } from '../middlewares/authMiddleware'
 import passport from '../config/passportAuth'
 
-export const authRoute = express.Router() // Use Router() instead of express()
+export const authRoute = express.Router()
 
-authRoute.get('/', (req:Request, res:Response) => {
-  return res.json({ message: "hello" })
+// Test route
+authRoute.get('/', (req, res) => {
+  return res.json({ message: "Auth service is running" })
 })
 
-// Google OAuth
+// Updated Google OAuth with account switching support
 authRoute.get(
   '/google',
-  passport.authenticate('google', { 
-    scope: ['profile', 'email'],
-    session: false 
-  })
+  (req, res, next) => {
+    const state = req.query.state || Date.now().toString();
+    
+    // Use any to bypass TypeScript issues with passport options
+    const authenticate = passport.authenticate('google', {
+      scope: ['profile', 'email', 'openid'],
+      session: false,
+      accessType: 'offline',
+      prompt: req.query.prompt || 'select_account',
+      state: state
+    } as any); // Add 'as any' to fix TypeScript issues
+    
+    authenticate(req, res, next);
+  }
 );
 
-// Facebook OAuth  
-authRoute.get(
-  '/facebook',
-  passport.authenticate('facebook', { 
-    scope: ['email', 'public_profile'],
-    session: false 
-  })
-);
+// Specific endpoint for switching accounts
+authRoute.get('/google/switch', (req, res) => {
+  const state = Date.now().toString();
+  const redirectUrl = `/auth/google?prompt=select_account&state=${state}`;
+  res.redirect(redirectUrl);
+});
 
-// Fixed Google Callback with proper error handling
+// Google callback route
 authRoute.get(
   '/google/callback',
   (req, res, next) => {
-    console.log('🔄 Google callback initiated:', {
-      code: req.query.code ? 'present' : 'missing',
-      error: req.query.error,
-      userAgent: req.headers['user-agent']
-    });
-    next();
+    passport.authenticate('google', { 
+      session: false,
+      failureRedirect: '/auth/failure'
+    } as any)(req, res, next); // Add 'as any' here too
   },
-  passport.authenticate('google', { 
-    session: false,
-    failureRedirect: '/auth/failure' // Add failure redirect
-  }),
   (req, res) => {
     try {
       if (!req.user) {
-        console.error('❌ No user data in request');
         return res.status(401).json({
           success: false,
           message: 'Authentication failed - no user data'
@@ -53,10 +55,7 @@ authRoute.get(
       }
 
       const { userData, accessToken, refreshToken } = req.user as any;
-      
-      console.log('✅ Google auth successful for:', userData.email);
 
-      // Return JSON response
       return res.status(200).json({
         success: true,
         message: 'Google login successful',
@@ -66,7 +65,6 @@ authRoute.get(
       });
 
     } catch (error) {
-      console.error('❌ Callback handler error:', error);
       return res.status(500).json({
         success: false,
         message: 'Authentication processing failed'
@@ -75,13 +73,25 @@ authRoute.get(
   }
 );
 
-// Facebook Callback (apply same pattern)
+// Facebook OAuth routes
+authRoute.get(
+  '/facebook',
+  (req, res, next) => {
+    passport.authenticate('facebook', { 
+      scope: ['email', 'public_profile'],
+      session: false 
+    } as any)(req, res, next);
+  }
+);
+
 authRoute.get(
   '/facebook/callback',
-  passport.authenticate('facebook', { 
-    session: false,
-    failureRedirect: '/auth/failure'
-  }),
+  (req, res, next) => {
+    passport.authenticate('facebook', { 
+      session: false,
+      failureRedirect: '/auth/failure'
+    } as any)(req, res, next);
+  },
   (req, res) => {
     try {
       if (!req.user) {
@@ -92,7 +102,7 @@ authRoute.get(
       }
 
       const { userData, accessToken, refreshToken } = req.user as any;
-      
+
       return res.status(200).json({
         success: true,
         message: 'Facebook login successful',
@@ -102,7 +112,6 @@ authRoute.get(
       });
 
     } catch (error) {
-      console.error('Facebook callback error:', error);
       return res.status(500).json({
         success: false,
         message: 'Facebook authentication processing failed'
@@ -111,9 +120,8 @@ authRoute.get(
   }
 );
 
-// Add failure route for handling errors
+// Auth failure handler
 authRoute.get('/failure', (req, res) => {
-  console.error('Auth failure:', req.query);
   return res.status(401).json({
     success: false,
     message: 'Authentication failed',
@@ -121,7 +129,7 @@ authRoute.get('/failure', (req, res) => {
   });
 });
 
-// Your existing routes
+// Existing auth routes
 authRoute.post('/login', loginController)
 authRoute.post('/signup', registerController)
 authRoute.post('/reset-password', resetPasswordController)
