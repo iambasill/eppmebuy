@@ -1,7 +1,8 @@
 import express from 'express'
 import { changePasswordController, forgotPasswordController, loginController, refreshTokenController, registerController, resetPasswordController, verifyResetTokenController} from '../controller/authController'
 import { authMiddleware } from '../middlewares/authMiddleware'
-import passport from 'passport'
+import passport from '../config/passportAuth'
+
 
 export const authRoute = express()
 
