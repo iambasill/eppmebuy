@@ -93,7 +93,7 @@ export const updateEventSchema = sanitizeObject(z.object({
   ageRestriction: z.number().int().positive().optional(),
   
   // Pricing & Fees
-  vipFee: z.number().min(0).max(100).optional(),
+  vipFee: z.number().min(0).min(0).optional(),
   economyFee: z.number().min(0).optional(),
   
   // Ticketing Settings
