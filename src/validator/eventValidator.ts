@@ -16,9 +16,9 @@ export const createEventSchema = sanitizeObject(z.object({
   // Basic Info
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),
-  coverImages: z.array(z.string()).min(1, "At least one cover image is required"), // Changed: removed .url() validation
+  coverImages: z.array(z.string()).min(1, "At least one cover image is required"),
   category: eventCategoryEnum,
-  tags: z.array(z.string()).default([]),
+  tags: z.string().optional().default(""), // ✅ Changed: single string instead of array
   
   // Timing
   startDateTime: z.string().datetime(),
@@ -67,11 +67,12 @@ export const createEventSchema = sanitizeObject(z.object({
 // Update Event Schema (all fields optional except what shouldn't change)
 export const updateEventSchema = sanitizeObject(z.object({
   // Basic Info
-  title: z.string().min(1, "Title is required"),
-  description: z.string().min(1, "Description is required"),
-  coverImages: z.array(z.string()).min(1, "At least one cover image is required"), // Changed: removed .url() validation
-  category: eventCategoryEnum,
-  tags: z.array(z.string()).default([]),
+  title: z.string().min(1).optional(),
+  description: z.string().min(1).optional(),
+  coverImages: z.array(z.string()).min(1).optional(),
+  category: eventCategoryEnum.optional(),
+  tags: z.string().optional(), // ✅ Changed: single string instead of array
+  
   // Timing
   startDateTime: z.string().datetime().optional(),
   endDateTime: z.string().datetime().optional(),
