@@ -19,7 +19,7 @@ export const google = (req: Request, res: Response, next: NextFunction) => {
     session: false,
     accessType: 'offline',
     prompt: prompt,
-    state: redirectUri // Pass the app's deep link in state
+    state: redirectUri 
   })(req, res, next);
 }
 
