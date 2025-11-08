@@ -25,7 +25,8 @@ export const generateAuthToken =async (userId: string) => {
 
 
 export const verifyToken = async(token: string,type:string="auth") => {
-    if (!token) throw new Error('Token is required');
+    if (!token) throw new BadRequestError('Token is required');
+    try {
     const secret =
         type === 'reset'
             ? (config.AUTH_JWT_RESET_TOKEN as string)
@@ -43,6 +44,9 @@ export const verifyToken = async(token: string,type:string="auth") => {
         }
 
         return payload;
+        } catch (err) {
+           throw new BadRequestError('Invalid or Expired token!');
+        }
     }
 
 export const createUserSession = async (userId:string, refreshToken:string, req:any) => {
