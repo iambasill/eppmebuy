@@ -18,7 +18,6 @@ export const createEventSchema = sanitizeObject(z.object({
   description: z.string().min(1, "Description is required"),
   coverImages: z.array(z.string()).min(1, "At least one cover image is required"),
   category: eventCategoryEnum,
-  tags: z.string().optional().default(""), // ✅ Changed: single string instead of array
   
   // Timing
   startDateTime: z.string().datetime(),
@@ -71,7 +70,6 @@ export const updateEventSchema = sanitizeObject(z.object({
   description: z.string().min(1).optional(),
   coverImages: z.array(z.string()).min(1).optional(),
   category: eventCategoryEnum.optional(),
-  tags: z.string().optional(), // ✅ Changed: single string instead of array
   
   // Timing
   startDateTime: z.string().datetime().optional(),

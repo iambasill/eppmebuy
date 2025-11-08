@@ -38,8 +38,6 @@ export const createEventController = async (req: Request, res: Response, next: N
   const validatedData = createEventSchema.parse({
     ...req.body,
     // coverImages,
-    // Parse JSON fields if sent as strings from FormData
-    tags: req.body.tags ? JSON.parse(req.body.tags) : [],
   });
   
   // Generate slug from title
@@ -136,7 +134,6 @@ export const getEventsController = async (req: Request, res: Response) => {
     where.OR = [
       { title: { contains: search, mode: 'insensitive' } },
       { description: { contains: search, mode: 'insensitive' } },
-      { tags: { has: search } },
     ];
   }
 
@@ -293,10 +290,6 @@ export const updateEventController = async (req: Request, res: Response) => {
     updatePayload.coverImages = newCoverImages;
   }
 
-  // Parse JSON fields if sent as strings from FormData
-  if (req.body.tags && typeof req.body.tags === 'string') {
-    updatePayload.tags = JSON.parse(req.body.tags);
-  }
 
   const validatedData = updateEventSchema.parse(updatePayload);
 

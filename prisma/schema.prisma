@@ -247,7 +247,6 @@ model Event {
   description           String            @db.Text
   coverImages           String[]          @map("cover_images")
   category               EventCategory
-  tags                  String?         @map("tags")
   
   // Timing
   startDateTime         DateTime          @map("start_datetime")
