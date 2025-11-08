@@ -30,14 +30,14 @@ export const createEventController = async (req: Request, res: Response, next: N
 //     throw new BadRequestError("At least one cover image is required");
 //   }
 
-const coverImages = getFileUrls(files);
+// const coverImages = getFileUrls(files);
 
 
 
   // Merge coverImages with request body
   const validatedData = createEventSchema.parse({
     ...req.body,
-    coverImages,
+    // coverImages,
     // Parse JSON fields if sent as strings from FormData
     tags: req.body.tags ? JSON.parse(req.body.tags) : [],
   });
