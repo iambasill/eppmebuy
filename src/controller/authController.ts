@@ -1,11 +1,11 @@
 import express, { Request, Response, NextFunction } from "express";
 import { BadRequestError, unAuthorizedError } from "../logger/exceptions";
-import { signupSchema, loginSchema, changePasswordSchema, refreshTokenSchema, forgotPasswordSchema, resetPasswordSchema, verifyOtpSchema } from "../schema/authSchema";
+import { signupSchema, loginSchema, changePasswordSchema, refreshTokenSchema, forgotPasswordSchema, resetPasswordSchema, verifyOtpSchema } from "../validator/authValidator";
 import bcrypt from 'bcrypt';
 import { prismaclient } from "../lib/prisma-postgres";
 import { createUserSession, generateAuthToken, generateToken, verifyToken } from "../utils/func";
 import { User, UserRole } from "../../generated/prisma";
-import { generateOtp, verifyOtp } from "../config/otpHandler";
+import { generateOtp, verifyOtp } from "../utils/otpHandler";
 import { length } from "zod";
 
 
