@@ -31,10 +31,10 @@ const fileFilter = (req:any, file:any, cb:any) => {
 //
 if (config.STORAGE_ENV === "cloud") {
   const s3 = new S3Client({
-    region: config.CLOUD_REGION,
+    region: config.CLOUD_REGION || "",
     credentials: {
-      accessKeyId: config.CLOUD_ACCESS_KEY_ID,
-      secretAccessKey: config.CLOUD_SECRET_ACCESS_KEY,
+      accessKeyId: config.CLOUD_ACCESS_KEY_ID || "",
+      secretAccessKey: config.CLOUD_SECRET_ACCESS_KEY || "",
     },
   });
 
