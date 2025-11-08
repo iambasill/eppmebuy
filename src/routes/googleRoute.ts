@@ -1,5 +1,5 @@
 import express from 'express'
-import { google, googleCallback, googleSwitch } from '../controller/googleController'
+import { google, googleCallback, googleCallbackSuccess, googleSwitch } from '../controller/googleController'
 
 
 export const googleRoute = express.Router()
@@ -9,6 +9,6 @@ export const googleRoute = express.Router()
 // Existing auth routes
 googleRoute.get('/', google)
 googleRoute.get('/switch', googleSwitch)
-googleRoute.get('/callback', googleCallback)
+googleRoute.get('/callback', googleCallback, googleCallbackSuccess)
 
 

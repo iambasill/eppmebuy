@@ -14,6 +14,7 @@ import { googleRoute } from './googleRoute'
 export const authRoute = express.Router()
 
 authRoute.use('/google', googleRoute)
+
 authRoute.post('/login', loginController)
 authRoute.post('/signup', registerController)
 authRoute.post('/reset-password', resetPasswordController)

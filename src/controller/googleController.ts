@@ -39,7 +39,7 @@ export const googleSwitch = (req: Request, res: Response, next: NextFunction) =>
     session: false,
     accessType: 'offline',
     prompt: 'select_account',
-    state: redirectUri // Pass the app's deep link in state
+    state: redirectUri 
   })(req, res, next);
 };
 
@@ -52,7 +52,7 @@ export const googleCallback = (req: Request, res: Response, next: NextFunction) 
       console.error('Google OAuth Error:', err);
       
       // Get the redirectUri from state
-      const redirectUri = req.query.state as string || 'myapp://auth/callback';
+      const redirectUri = req.query.state as string ;
       
       // Redirect back to app with error
       return res.redirect(`${redirectUri}?error=${encodeURIComponent(err.message || 'authentication_error')}`);
@@ -60,7 +60,7 @@ export const googleCallback = (req: Request, res: Response, next: NextFunction) 
     
     if (!user) {
       const message = info?.message || 'Authentication failed';
-      const redirectUri = req.query.state as string || 'myapp://auth/callback';
+      const redirectUri = req.query.state as string;
       
       // Redirect back to app with error
       return res.redirect(`${redirectUri}?error=${encodeURIComponent(message)}`);
@@ -75,14 +75,14 @@ export const googleCallback = (req: Request, res: Response, next: NextFunction) 
 export const googleCallbackSuccess = (req: Request, res: Response) => {
   try {
     if (!req.user) {
-      const redirectUri = req.query.state as string || 'myapp://auth/callback';
+      const redirectUri = req.query.state as string ;
       return res.redirect(`${redirectUri}?error=no_user_data`);
     }
 
     const { userData, accessToken, refreshToken } = req.user as any;
     
     // Get the redirectUri from the state parameter
-    const redirectUri = req.query.state as string || 'myapp://auth/callback';
+    const redirectUri = req.query.state as string ;
 
     // Build the redirect URL with tokens as query parameters
     const params = new URLSearchParams({
@@ -101,7 +101,7 @@ export const googleCallbackSuccess = (req: Request, res: Response) => {
 
   } catch (error: any) {
     console.error('Callback processing error:', error);
-    const redirectUri = req.query.state as string || 'myapp://auth/callback';
+    const redirectUri = req.query.state as string;
     return res.redirect(`${redirectUri}?error=${encodeURIComponent(error.message || 'processing_error')}`);
   }
 }
