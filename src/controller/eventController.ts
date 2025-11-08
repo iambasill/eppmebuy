@@ -18,10 +18,6 @@ import { getFileUrls } from "../utils/fileHandler";
 export const createEventController = async (req: Request, res: Response, next: NextFunction) => {
   const user = req.user as User;
   
-  // Check if user is a HOST
-  if (user.role !== "HOST") {
-    throw new UnAuthorizedError("Only hosts can create events");
-  }
 
   // Get uploaded files from multer
   const files = req.files as Express.Multer.File[];
