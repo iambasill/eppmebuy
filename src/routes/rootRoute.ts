@@ -8,7 +8,7 @@ export const rootRoute = express()
 
 
 rootRoute.use('/api/auth',authRoute)
-rootRoute.use('/api/event', eventRoute)
+rootRoute.use('/api/events', eventRoute)
 rootRoute.get('/attachment/:filename',attachmentController)
 
 
