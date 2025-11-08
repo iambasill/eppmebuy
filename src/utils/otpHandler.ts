@@ -1,5 +1,5 @@
 import speakeasy from 'speakeasy';
-import { config } from '../config/envConfig';
+import { config } from '../config';
 
 
 export const generateOtp = async() => {

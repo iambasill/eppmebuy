@@ -8,6 +8,7 @@ import {
 import { prismaclient } from "../lib/prisma-postgres";
 import { User } from "../../generated/prisma";
 import slugify from "slugify";
+import { getFileUrls } from "../utils/fileHandler";
 
 // ====================== CONTROLLERS ====================== //
 
@@ -17,8 +18,8 @@ import slugify from "slugify";
 export const createEventController = async (req: Request, res: Response, next: NextFunction) => {
   const user = req.user as User;
   
-  // Check if user is a HOST or BOTH
-  if (user.role !== "HOST" && user.role !== "BOTH") {
+  // Check if user is a HOST
+  if (user.role !== "HOST") {
     throw new UnAuthorizedError("Only hosts can create events");
   }
 
@@ -29,8 +30,9 @@ export const createEventController = async (req: Request, res: Response, next: N
     throw new BadRequestError("At least one cover image is required");
   }
 
-  // Extract file URLs (assuming multer saves to cloud storage or returns URLs)
-  const coverImages = files.map(file => file.path || file.filename);
+const coverImages = getFileUrls(files);
+
+
 
   // Merge coverImages with request body
   const validatedData = createEventSchema.parse({

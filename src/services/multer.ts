@@ -4,7 +4,7 @@ import  multer from "multer"
 import  multerS3   from "multer-s3"
 import  { S3Client }  from "@aws-sdk/client-s3" 
 import  { BadRequestError }   from "../logger/exceptions"
-import  { config } from "../config/envConfig"
+import { config } from "../config"
 
 let upload:any;
 
@@ -30,34 +30,35 @@ const fileFilter = (req:any, file:any, cb:any) => {
 // ✅ S3 Storage
 //
 if (config.STORAGE_ENV === "cloud") {
-  // const s3 = new S3Client({
-  //   region: config.CLOUD_REGION || "",
-  //   credentials: {
-  //     accessKeyId: config.CLOUD_ACCESS_KEY_ID || "",
-  //     secretAccessKey: config.CLOUD_SECRET_ACCESS_KEY || "",
-  //   },
-  // });
+  const s3 = new S3Client({
+    region: config.cloud?.CLOUD_REGION || "",
+    credentials: {
+      accessKeyId: config.cloud?.CLOUD_ACCESS_KEY_ID || "",
+      secretAccessKey: config.cloud?.CLOUD_SECRET_ACCESS_KEY || "",
+    },
+  });
 
-  // upload = multer({
-  //   storage: multerS3({
-  //     s3,
-  //     bucket: config.CLOUD_BUCKET_NAME || "",
-  //     acl: "public-read", // set to "private" if you want restricted access
-  //     key: (req, file, cb) => {
-  //       const fileName = `${Date.now()}-${file.originalname}`;
-  //       cb(null, `uploads/${fileName}`);
-  //     },
-  //   }),
-  //   fileFilter,
-  //   limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
-  // });
+  upload = multer({
+    storage: multerS3({
+      s3,
+      bucket: (config as any).CLOUD_BUCKET_NAME || "",
+      acl: "public-read", // set to "private" if you want restricted access
+      key: (req, file, cb) => {
+        const fileName = `${Date.now()}-${file.originalname}`;
+        cb(null, `uploads/${fileName}`);
+      },
+    }),
+    fileFilter,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+  });
 }
 
 //
 // ✅ Local Storage (Fallback)
 //
+
 else {
-  const uploadDir = path.join(__dirname, "../../storage/uploads");
+  const uploadDir = path.join(__dirname, "../../public/uploads'");
 
   // Ensure the directory exists
   if (!fs.existsSync(uploadDir)) {
