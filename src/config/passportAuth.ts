@@ -1,6 +1,6 @@
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-import { config } from './envConfig';
+import { config } from '../config';
 import { prismaclient } from '../lib/prisma-postgres';
 import { createUserSession, generateAuthToken } from '../utils/func';
 import { Strategy as FacebookStrategy } from 'passport-facebook';

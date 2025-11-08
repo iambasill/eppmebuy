@@ -1,7 +1,7 @@
 
 import jwt from 'jsonwebtoken';
 import { prismaclient } from '../lib/prisma-postgres';
-import { config } from '../config/envConfig';
+import { config } from '../config';
 import { BadRequestError } from '../logger/exceptions';
 
 export function checkUser(id:string){

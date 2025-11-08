@@ -5,7 +5,7 @@ import cors from 'cors'
 import { morganMiddleware } from './utils/logger';
 import rateLimit from 'express-rate-limit';
 import slowDown from 'express-slow-down';
-import { config } from './config/envConfig';
+import { config } from './config';
 import passport from './config/passportAuth';
 const app = express()
 
