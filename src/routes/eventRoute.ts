@@ -1,3 +1,39 @@
-import express  from "express"
+import express from 'express';
+import { 
+  createEventController,
+  getEventsController,
+  getEventController,
+  updateEventController,
+  deleteEventController,
+  cancelEventController,
+  publishEventController,
+  getMyEventsController
+} from '../controller/eventController';
+import { authMiddleware } from '../middlewares/authMiddleware';
+import upload  from '../services/multer'; // Import your multer config
 
-export const eventRoute = express.Router()
+export const eventRoute = express.Router();
+
+// Public routes (no auth required, but can use optional auth for personalization)
+eventRoute.get('/', getEventsController);
+eventRoute.get('/:id', getEventController);
+
+// Protected routes (auth required)
+// Multiple file upload for cover images (max 5 images)
+eventRoute.post('/', 
+  authMiddleware, 
+  upload.array('coverImages', 5), // Field name 'coverImages', max 5 files
+  createEventController
+);
+
+eventRoute.get('/my/events', authMiddleware, getMyEventsController);
+
+eventRoute.put('/:id', 
+  authMiddleware, 
+  upload.array('coverImages', 5), // Optional: new images on update
+  updateEventController
+);
+
+eventRoute.delete('/:id', authMiddleware, deleteEventController);
+eventRoute.post('/:id/cancel', authMiddleware, cancelEventController);
+eventRoute.post('/:id/publish', authMiddleware, publishEventController);

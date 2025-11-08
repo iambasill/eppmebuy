@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import jwt, { JwtPayload } from 'jsonwebtoken'
 import { NextFunction } from "express";
-import { unAuthorizedError } from "../logger/exceptions";
+import { UnAuthorizedError } from "../logger/exceptions";
 import { checkUser, verifyToken } from "../utils/func";
 
 // Extend the Request interface to include user
@@ -17,12 +17,12 @@ declare global {
 
 export const authMiddleware = async(req: Request, _res: Response, next: NextFunction) => {
     const token = req.header('Authorization')?.split(' ')[1];
-    if (!token || token == null) throw new unAuthorizedError("INVALID TOKEN OR EXPIRED TOKEN");
+    if (!token || token == null) throw new UnAuthorizedError("INVALID TOKEN OR EXPIRED TOKEN");
 
     const decoded:jwt.JwtPayload = await verifyToken(token)
-    if (!decoded || typeof decoded !== 'object' || !('id' in decoded)) throw new unAuthorizedError("INVALID OR EXPIRED TOKEN");
+    if (!decoded || typeof decoded !== 'object' || !('id' in decoded)) throw new UnAuthorizedError("INVALID OR EXPIRED TOKEN");
     const user:any = await checkUser((decoded as any).id as string)
-    if (!user || user.status?.toUpperCase() !== "ACTIVE") throw new unAuthorizedError("Access Denied")
+    if (!user || user.status?.toUpperCase() !== "ACTIVE") throw new UnAuthorizedError("Access Denied")
     req.user = user
     req.token = token
     next();

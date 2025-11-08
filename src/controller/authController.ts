@@ -1,16 +1,15 @@
 import express, { Request, Response, NextFunction } from "express";
-import { BadRequestError, unAuthorizedError } from "../logger/exceptions";
+import { BadRequestError, UnAuthorizedError } from "../logger/exceptions";
 import { signupSchema, loginSchema, changePasswordSchema, refreshTokenSchema, forgotPasswordSchema, resetPasswordSchema, verifyOtpSchema } from "../validator/authValidator";
 import bcrypt from 'bcrypt';
 import { prismaclient } from "../lib/prisma-postgres";
 import { createUserSession, generateAuthToken, generateToken, verifyToken } from "../utils/func";
 import { User, UserRole } from "../../generated/prisma";
 import { generateOtp, verifyOtp } from "../utils/otpHandler";
-import { length } from "zod";
 
 
 
-// ====================== CONTROLLERS ====================== //
+// ====================== CONTROLLERS ====================== //S
 
 /**
  * Register a new user.
@@ -74,13 +73,13 @@ export const loginController = async (req: Request, res: Response) => {
 
 export const refreshTokenController = async (req: Request, res: Response) => {
   const { refreshToken: token } = refreshTokenSchema.parse(req.body);
-  if (!token) throw new unAuthorizedError("No refresh token provided");
+  if (!token) throw new UnAuthorizedError("No refresh token provided");
 
   const decoded = await verifyToken(token);
   const userSession = await prismaclient.userSession.findFirst({ where: { id: decoded.id, refreshToken:token , loggedOutAt:null }, select: { userId: true } });
   const user:any = await prismaclient.user.findUnique({ where: { id: decoded.id }, select: { id: true ,status:true} });
 
-  if (!user || user.status === "BLOCKED", !userSession) throw new unAuthorizedError("Invalid refresh token");
+  if (!user || user.status === "BLOCKED", !userSession) throw new UnAuthorizedError("Invalid refresh token");
 
   const {accessToken, refreshToken} = await generateAuthToken(user.id);
   await createUserSession(user.id, refreshToken, req);

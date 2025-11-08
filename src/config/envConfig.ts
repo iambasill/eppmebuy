@@ -20,8 +20,11 @@ interface Config {
     FACEBOOK_CALLBACK_URL?: string
     OTP_SECRET: string
     PORT: string
-
-
+    STORAGE_ENV?: string
+    CLOUD_REGION?: string
+    CLOUD_ACCESS_KEY_ID?: string
+    CLOUD_SECRET_ACCESS_KEY?: string
+    CLOUD_BUCKET_NAME?: string
 }
 
 
@@ -42,8 +45,13 @@ export const config : Config ={
     FACEBOOK_CALLBACK_URL : process.env.FACEBOOK_CALLBACK_URL,
     OTP_SECRET : process.env.OTP_SECRET!,
     PORT : process.env.PORT || '5000',
-
+    STORAGE_ENV : process.env.STORAGE_ENV || "local",
+    CLOUD_REGION : process.env.CLOUD_REGION,
+    CLOUD_ACCESS_KEY_ID: process.env.CLOUD_ACCESS_KEY,
+    CLOUD_SECRET_ACCESS_KEY: process.env.CLOUD_SECRET_KEY,
+    CLOUD_BUCKET_NAME: process.env.CLOUD_BUCKET_NAME
 }
+
 
 Object.keys(config).forEach((key) => {
     if (!config[key as keyof Config]){

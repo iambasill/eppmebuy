@@ -7,8 +7,14 @@ export class BadRequestError extends http_Exception {
     }
 }
 
-export class unAuthorizedError extends http_Exception {
+export class UnAuthorizedError extends http_Exception {
     constructor(message: string=("unAuthorized"),statusCode: number = 401) {
+        super(statusCode, message);
+    }
+}
+
+export class NotFoundError extends http_Exception {
+    constructor(message: string=("notFound"),statusCode: number = 404) {
         super(statusCode, message);
     }
 }
