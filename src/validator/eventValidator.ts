@@ -25,27 +25,27 @@ export const createEventSchema = sanitizeObject(z.object({
   timezone: z.string().default("UTC"),
   
   // Location
-  isOnline: z.boolean().default(false),
+  isOnline: z.string().default("false"),
   streamingUrl: z.string().url().optional(),
   venueName: z.string().min(1, "Venue name is required"),
   venueAddress: z.string().min(1, "Venue address is required"),
   city: z.string().optional(),
   state: z.string().optional(),
-  country: z.string().min(1, "Country is required"),
-  latitude: z.number().optional(),
-  longitude: z.number().optional(),
+  country: z.string().default("Nigeria"),
+  latitude: z.string().optional(),
+  longitude: z.string().optional(),
   
   // Capacity & Access
-  totalCapacity: z.number().int().positive().optional(),
+  totalCapacity: z.string().optional(),
   accessType: eventAccessTypeEnum.default("INVITE_ONLY"),
-  ageRestriction: z.number().int().positive().optional(),
+  ageRestriction: z.string().optional(),
   
   // Pricing & Fees
-  vipFee: z.number().min(0).max(100).optional(),
-  economyFee: z.number().min(0).optional(),
+  vipFee: z.string().min(0).max(100).optional(),
+  economyFee: z.string().min(0).optional(),
   
   // Ticketing Settings
-  ticketLimitPerOrder: z.number().int().positive().default(10),
+  ticketLimitPerOrder: z.string().default("10"),
   
   // Check-in Settings
   checkInMethod: checkInMethodEnum.default("QR_SCAN"),
@@ -77,24 +77,24 @@ export const updateEventSchema = sanitizeObject(z.object({
   timezone: z.string().optional(),
   
   // Location
-  isOnline: z.boolean().optional(),
+  isOnline: z.string().optional(),
   streamingUrl: z.string().url().optional(),
   venueName: z.string().min(1).optional(),
   venueAddress: z.string().min(1).optional(),
   city: z.string().optional(),
   state: z.string().optional(),
   country: z.string().min(1).optional(),
-  latitude: z.number().optional(),
-  longitude: z.number().optional(),
+  latitude: z.string().optional(),
+  longitude: z.string().optional(),
   
   // Capacity & Access
-  totalCapacity: z.number().int().positive().optional(),
+  totalCapacity: z.string().optional(),
   accessType: eventAccessTypeEnum.optional(),
-  ageRestriction: z.number().int().positive().optional(),
+  ageRestriction: z.string().optional(),
   
   // Pricing & Fees
-  vipFee: z.number().min(0).min(0).optional(),
-  economyFee: z.number().min(0).optional(),
+  vipFee: z.string().min(0).optional(),
+  economyFee: z.string().min(0).optional(),
   
   // Ticketing Settings
   ticketLimitPerOrder: z.number().int().positive().optional(),
