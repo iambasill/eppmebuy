@@ -9,15 +9,24 @@ import { prismaclient } from "../lib/prisma-postgres";
 import { User } from "../../generated/prisma";
 import slugify from "slugify";
 import { getFileUrls } from "../utils/fileHandler";
+import sanitize from "sanitize-html";
 
 // ====================== CONTROLLERS ====================== //
 
-/**
- * Create a new event (HOST only).
- */
 export const createEventController = async (req: Request, res: Response, next: NextFunction) => {
   const user = req.user as User;
-  
+  const idempotencyKey = req.header('Idempotency-Key') 
+
+  const valid = await prismaclient.idempontency_key.findFirst({
+    where: {key: idempotencyKey}
+  })
+
+    if (valid)  {
+      res.status(201).send({
+      success: true,
+      message: "Event created successfully",
+  });
+  };
 
   // Get uploaded files from multer
   const files = req.files as Express.Multer.File[];
@@ -74,11 +83,13 @@ const coverImages = getFileUrls(files);
 
   // TODO: Queue job for event created notification
   // await eventQueue.add('event-created', { eventId: event.id });
+  await prismaclient.idempontency_key.create({
+    data: {key: idempotencyKey as string}
+  })
 
   res.status(201).send({
     success: true,
     message: "Event created successfully",
-    data: event,
   });
 };
 
@@ -189,7 +200,7 @@ export const getEventsController = async (req: Request, res: Response) => {
  * Get single event by ID or slug.
  */
 export const getEventController = async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const  id  = sanitize(req.params.id);
   
   const event = await prismaclient.event.findFirst({
     where: {
@@ -464,10 +475,6 @@ export const publishEventController = async (req: Request, res: Response) => {
 
   if (event.hostId !== user.id) {
     throw new UnAuthorizedError("You can only publish your own events");
-  }
-
-  if (event.status !== "DRAFT") {
-    throw new BadRequestError("Only draft events can be published");
   }
 
   // Validate event has at least one ticket tier

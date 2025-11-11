@@ -4,10 +4,7 @@ import { sanitizeObject } from "../utils/zodHandler"
 // Enums
 export const eventStatusEnum = z.enum(["DRAFT", "PUBLISHED", "CANCELLED", "COMPLETED"])
 export const eventAccessTypeEnum = z.enum(["PUBLIC", "INVITE_ONLY", "PRIVATE"])
-export const eventCategoryEnum = z.enum([
-  "MUSIC", "SPORTS", "ARTS", "TECHNOLOGY", "BUSINESS", 
-  "FOOD", "EDUCATION", "ENTERTAINMENT", "HEALTH", "NIGHTLIFE", "OTHER"
-])
+
 export const checkInMethodEnum = z.enum(["QR_SCAN", "MANUAL", "KIOSK"])
 export const qrScanModeEnum = z.enum(["SINGLE_USE", "MULTI_USE"])
 
@@ -17,7 +14,7 @@ export const createEventSchema = sanitizeObject(z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),
   coverImages: z.array(z.string()).min(1, "At least one cover image is required"),
-  category: eventCategoryEnum,
+  category: z.string() ,
   
   // Timing
   startDateTime: z.string().datetime(),
@@ -69,7 +66,7 @@ export const updateEventSchema = sanitizeObject(z.object({
   title: z.string().min(1).optional(),
   description: z.string().min(1).optional(),
   coverImages: z.array(z.string()).min(1).optional(),
-  category: eventCategoryEnum.optional(),
+  category: z.string().optional(),
   
   // Timing
   startDateTime: z.string().datetime().optional(),
@@ -121,7 +118,7 @@ export const getEventsQuerySchema = z.object({
   limit: z.string().transform(Number).pipe(z.number().int().positive().max(100)).default(20),
   
   // Filters
-  category: eventCategoryEnum.optional(),
+  category: z.string().optional(),
   status: eventStatusEnum.optional(),
   accessType: eventAccessTypeEnum.optional(),
   city: z.string().optional(),

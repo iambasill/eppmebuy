@@ -12,9 +12,8 @@ return user
 }
 
 export const generateAuthToken =async (userId: string) => {
-    let accessToken =  jwt.sign({ id: userId }, config.AUTH_JWT_TOKEN as string, { expiresIn: '1h' });
-    let refreshToken = jwt.sign({ id: userId }, config.AUTH_JWT_TOKEN as string, { expiresIn: '5h' });
-    return { accessToken, refreshToken };
+    let accessToken =  jwt.sign({ id: userId }, config.AUTH_JWT_TOKEN as string);
+    return accessToken 
   }
 
 
@@ -49,7 +48,7 @@ export const verifyToken = async(token: string,type:string="auth") => {
         }
     }
 
-export const createUserSession = async (userId:string, refreshToken:string, req:any) => {
+export const createUserSession = async (userId:string, req:any) => {
     await prismaclient.userSession.updateMany({
         where: { userId: userId, loggedOutAt: null },
         data: { loggedOutAt: new Date() },
@@ -58,7 +57,6 @@ export const createUserSession = async (userId:string, refreshToken:string, req:
         await prismaclient.userSession.create({
           data: {
             userId: userId, 
-            refreshToken,
             userAgent: req.headers['user-agent'] || 'Unknown',
             ipAddress: req.ip,
           },

@@ -54,15 +54,14 @@ export const loginController = async (req: Request, res: Response) => {
 
   const { password: _, ...userData } = user; 
 
-  const {accessToken, refreshToken} = await generateAuthToken(user.id);
+  const accessToken = await generateAuthToken(user.id);
 
-  await createUserSession(user.id, refreshToken, req);
+  await createUserSession(user.id, req);
 
 
   res.status(200).send({
     success: true,
     accessToken,
-    refreshToken,
     user: userData,
   });
 };
@@ -81,9 +80,9 @@ export const refreshTokenController = async (req: Request, res: Response) => {
 
   if (!user || user.status === "BLOCKED", !userSession) throw new UnAuthorizedError("Invalid refresh token");
 
-  const {accessToken, refreshToken} = await generateAuthToken(user.id);
-  await createUserSession(user.id, refreshToken, req);
-  res.status(200).send({ success: true, accessToken: accessToken, refreshToken:refreshToken});
+  const accessToken  = await generateAuthToken(user.id);
+  await createUserSession(user.id, req);
+  res.status(200).send({ success: true, accessToken: accessToken});
 };
 
 
