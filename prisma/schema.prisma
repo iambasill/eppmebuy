@@ -239,7 +239,7 @@ model Event {
   timezone              String            @default("UTC")
   
   // Location
-  isOnline              String           @default("false") @map("is_online")
+  isOnline              String           @default("true") @map("is_online")
   streamingUrl          String?           @map("streaming_url")
   venueName             String            @map("venue_name")
   venueAddress          String            @map("venue_address")

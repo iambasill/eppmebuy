@@ -22,7 +22,7 @@ export const createEventSchema = sanitizeObject(z.object({
   timezone: z.string().default("UTC"),
   
   // Location
-  isOnline: z.string().default("false"),
+  isOnline: z.string().default("online"),
   streamingUrl: z.string().url().optional(),
   venueName: z.string().min(1, "Venue name is required"),
   venueAddress: z.string().min(1, "Venue address is required"),
@@ -55,7 +55,7 @@ export const createEventSchema = sanitizeObject(z.object({
   refundableUntil: z.string().datetime().optional(),
   
   // Publication
-  status: eventStatusEnum.default("DRAFT"),
+  status: eventStatusEnum.default("PUBLISHED"),
   visibilityDate: z.string().datetime().optional(),
   isFeatured: z.boolean().default(false),
 }))
@@ -119,12 +119,12 @@ export const getEventsQuerySchema = z.object({
   
   // Filters
   category: z.string().optional(),
-  status: eventStatusEnum.optional(),
+  status: eventStatusEnum.optional().default("PUBLISHED"),
   accessType: eventAccessTypeEnum.optional(),
   city: z.string().optional(),
   country: z.string().optional(),
   isFeatured: z.string().transform(val => val === "true").optional(),
-  isOnline: z.string().transform(val => val === "true").optional(),
+  isOnline: z.string().optional().default("true"),
   
   // Date filters
   startDateFrom: z.string().datetime().optional(),
