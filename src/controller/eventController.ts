@@ -165,7 +165,9 @@ export const getEventsController = async (req: Request, res: Response) => {
             reviews: true,
             favorites: true,
           }
-        }
+        },
+        orders: true
+
       }
     }),
     prismaclient.event.count({ where }),
