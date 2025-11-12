@@ -58,7 +58,7 @@ export const createUserSession = async (userId:string, req:any) => {
           data: {
             userId: userId, 
             userAgent: req.headers['user-agent'] || 'Unknown',
-            ipAddress: req.ip,
+            ipAddress: req.ip
           },
         });
 }

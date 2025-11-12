@@ -353,7 +353,7 @@ model AddOn {
   eventId               String      @map("event_id")
   event                 Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
   
-  name                  String      // Parking Pass, VIP Lounge, Merchandise
+  name                  String?      // Parking Pass, VIP Lounge, Merchandise
   description           String?     @db.Text
   priceCents            Int         @map("price_cents")
   currency              String      @default("USD")
