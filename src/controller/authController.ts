@@ -1,10 +1,6 @@
 import express, { Request, Response, NextFunction } from "express";
 import { BadRequestError, UnAuthorizedError } from "../logger/exceptions";
-<<<<<<< HEAD
-import { signupSchema, loginSchema, changePasswordSchema, forgotPasswordSchema, resetPasswordSchema, verifyOtpSchema } from "../validator/authValidator";
-=======
 import { signupSchema, loginSchema, changePasswordSchema,  forgotPasswordSchema, resetPasswordSchema, verifyOtpSchema } from "../validator/authValidator";
->>>>>>> 491171e165ca0a0cfdff08c2d2cd85b3e1c86df6
 import bcrypt from 'bcrypt';
 import { prismaclient } from "../lib/prisma-postgres";
 import { createUserSession, generateAuthToken, generateToken, verifyToken } from "../utils/func";
@@ -69,11 +65,6 @@ export const loginController = async (req: Request, res: Response) => {
     user: userData,
   });
 };
-
-<<<<<<< HEAD
-=======
-
->>>>>>> 491171e165ca0a0cfdff08c2d2cd85b3e1c86df6
 
 
 /**
