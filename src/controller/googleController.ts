@@ -79,7 +79,7 @@ export const googleCallbackSuccess = (req: Request, res: Response) => {
       return res.redirect(`${redirectUri}?error=no_user_data`);
     }
 
-    const { userData, accessToken, refreshToken } = req.user as any;
+    const { userData, accessToken } = req.user as any;
     
     // Get the redirectUri from the state parameter
     const redirectUri = req.query.state as string ;
@@ -87,7 +87,6 @@ export const googleCallbackSuccess = (req: Request, res: Response) => {
     // Build the redirect URL with tokens as query parameters
     const params = new URLSearchParams({
       accessToken: accessToken || '',
-      refreshToken: refreshToken || '',
       // Optional: include minimal user data
       userId: userData?.id || '',
       email: userData?.email || '',
