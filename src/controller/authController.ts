@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from "express";
 import { BadRequestError, UnAuthorizedError } from "../logger/exceptions";
-import { signupSchema, loginSchema, changePasswordSchema, refreshTokenSchema, forgotPasswordSchema, resetPasswordSchema, verifyOtpSchema } from "../validator/authValidator";
+import { signupSchema, loginSchema, changePasswordSchema, forgotPasswordSchema, resetPasswordSchema, verifyOtpSchema } from "../validator/authValidator";
 import bcrypt from 'bcrypt';
 import { prismaclient } from "../lib/prisma-postgres";
 import { createUserSession, generateAuthToken, generateToken, verifyToken } from "../utils/func";
@@ -66,24 +66,6 @@ export const loginController = async (req: Request, res: Response) => {
   });
 };
 
-/**
- * Refresh access token using refresh token.
- */
-
-export const refreshTokenController = async (req: Request, res: Response) => {
-  const { refreshToken: token } = refreshTokenSchema.parse(req.body);
-  if (!token) throw new UnAuthorizedError("No refresh token provided");
-
-  const decoded = await verifyToken(token);
-  const userSession = await prismaclient.userSession.findFirst({ where: { id: decoded.id, refreshToken:token , loggedOutAt:null }, select: { userId: true } });
-  const user:any = await prismaclient.user.findUnique({ where: { id: decoded.id }, select: { id: true ,status:true} });
-
-  if (!user || user.status === "BLOCKED", !userSession) throw new UnAuthorizedError("Invalid refresh token");
-
-  const accessToken  = await generateAuthToken(user.id);
-  await createUserSession(user.id, req);
-  res.status(200).send({ success: true, accessToken: accessToken});
-};
 
 
 /**
