@@ -17,16 +17,16 @@ export const createEventController = async (req: Request, res: Response, next: N
   const user = req.user as User;
   const idempotencyKey = req.header('Idempotency-Key') 
 
-  const valid = await prismaclient.idempontency_key.findFirst({
-    where: {key: idempotencyKey}
-  })
+  // const valid = await prismaclient.idempontency_key.findFirst({
+  //   where: {key: idempotencyKey}
+  // })
 
-    if (valid)  {
-      res.status(201).send({
-      success: true,
-      message: "Event created successfully",
-  });
-  };
+  //   if (valid)  {
+  //     res.status(201).send({
+  //     success: true,
+  //     message: "Event created successfully",
+  // });
+  // };
 
   // Get uploaded files from multer
   const files = req.files as Express.Multer.File[];
@@ -83,9 +83,9 @@ const coverImages = getFileUrls(files);
 
   // TODO: Queue job for event created notification
   // await eventQueue.add('event-created', { eventId: event.id });
-  await prismaclient.idempontency_key.create({
-    data: {key: idempotencyKey as string}
-  })
+  // await prismaclient.idempontency_key.create({
+  //   data: {key: idempotencyKey as string}
+  // })
 
   res.status(201).send({
     success: true,
