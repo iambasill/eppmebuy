@@ -2,8 +2,7 @@ import express from 'express'
 import { 
   changePasswordController, 
   forgotPasswordController, 
-  loginController, 
-  refreshTokenController, 
+  loginController,  
   registerController, 
   resetPasswordController, 
   verifyResetTokenController
@@ -21,7 +20,6 @@ authRoute.post('/reset-password', resetPasswordController)
 authRoute.post('/verify-otp', verifyResetTokenController)
 authRoute.post('/forgot-password', forgotPasswordController)
 authRoute.post('/change-password', authMiddleware, changePasswordController)
-authRoute.post('/refresh-token', authMiddleware, refreshTokenController)
 
 // Auth failure handler
 authRoute.get('/failure', (req, res) => {

@@ -87,10 +87,10 @@ async (req, accessToken, refreshToken, profile, done) => {
 
     // Generate tokens
     const tokens = await generateAuthToken(user.id);
-    await createUserSession(user.id, tokens.refreshToken, req);
+    await createUserSession(user.id, req);
   
     const {id,googleId, ...userData} = user;
-    return done(null, { userData, ...tokens });
+    return done(null, { userData,  });
 }
   )
 );
