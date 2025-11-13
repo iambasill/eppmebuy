@@ -16,7 +16,7 @@ passport.use(
 
     
 async (req, accessToken, refreshToken, profile, done) => {
-    const profileId = profile.id;
+    const profileId = profile.id ;
     const email = profile.emails?.[0]?.value;
     
     // First, try to find user by googleId OR email
@@ -106,7 +106,7 @@ async (req, accessToken, refreshToken, profile, done) => {
 //     scope: ['email', 'public_profile']
 //   },
 
-//   async (req, accessToken, refreshToken, profile, done) => {
+//   async (req, accessToken, profile, done) => {
 //     const profileId = profile.id;
 //     const email = profile.emails?.[0]?.value ;
     
@@ -180,7 +180,7 @@ async (req, accessToken, refreshToken, profile, done) => {
 
 //     // Generate tokens
 //     const tokens = await generateAuthToken(user.id);
-//     await createUserSession(user.id, tokens.refreshToken, req);
+//     await createUserSession(user.id,, req);
   
 //     const {id, facebookId, ...userData} = user;
 //     return done(null, { userData, ...tokens });

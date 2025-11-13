@@ -49,14 +49,13 @@
 //         });
 //       }
 
-//       const { userData, accessToken, refreshToken } = req.user as any;
+//       const { userData, accessToken } = req.user as any;
 
 //       return res.status(200).json({
 //         success: true,
 //         message: 'Facebook login successful',
 //         userData,
 //         accessToken,
-//         refreshToken
 //       });
 
 //     } catch (error: any) {
