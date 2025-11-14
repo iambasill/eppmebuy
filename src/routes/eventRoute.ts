@@ -15,8 +15,8 @@ import upload  from '../services/multer'; // Import your multer config
 export const eventRoute = express.Router();
 
 // Public routes (no auth required, but can use optional auth for personalization)
-eventRoute.get('/', getEventsController);
-eventRoute.get('/:id', getEventController);
+eventRoute.get('/', authMiddleware, getEventsController);
+eventRoute.get('/:id', authMiddleware ,getEventController);
 
 // Protected routes (auth required)
 // Multiple file upload for cover images (max 5 images)
