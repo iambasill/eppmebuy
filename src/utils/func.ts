@@ -13,7 +13,7 @@ return user
 
 export const generateAuthToken =async (userId: string) => {
     let accessToken =  jwt.sign({ id: userId }, config.AUTH_JWT_TOKEN as string);
-    return accessToken 
+    return {accessToken }
   }
 
 

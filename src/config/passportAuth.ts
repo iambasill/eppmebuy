@@ -5,6 +5,8 @@ import { prismaclient } from '../lib/prisma-postgres';
 import { createUserSession, generateAuthToken } from '../utils/func';
 import { Strategy as FacebookStrategy } from 'passport-facebook';
 
+
+
 passport.use(
   new GoogleStrategy(
     {
@@ -14,43 +16,25 @@ passport.use(
       passReqToCallback: true,
     },
 
-    
-async (req, accessToken, refreshToken, profile, done) => {
-    const profileId = profile.id ;
-    const email = profile.emails?.[0]?.value;
-    
-    // First, try to find user by googleId OR email
-    let user = await prismaclient.user.findFirst({
-      where: {
-        OR: [
-          { googleId: profileId },
-          { email: email }
-        ]
-      },
-      select: { 
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            phoneNumber: true,
-            role: true,
-            status: true,
-            googleId: true
+    async (req, accessToken, refreshToken, profile, done) => {
+      try {
+        const profileId = profile.id;
+        const email = profile.emails?.[0]?.value;
 
-      },
-    });
+        // Validate email exists
+        if (!email) {
+          return done(new Error('No email provided by Google'), undefined);
+        }
 
-    if (user && !user.googleId) {
-      // Update existing user with Google info if needed
-    
-        user = await prismaclient.user.update({
-          where: { id: user.id },
-          data: {
-            googleId: profileId,
-            emailVerified: true,
-
+        // First, try to find user by googleId OR email
+        let user = await prismaclient.user.findFirst({
+          where: {
+            OR: [
+              { googleId: profileId },
+              { email: email }
+            ]
           },
-          select: { 
+          select: {
             id: true,
             firstName: true,
             lastName: true,
@@ -61,37 +45,72 @@ async (req, accessToken, refreshToken, profile, done) => {
             googleId: true
           },
         });
-    } else if (!user) {
-      // Create new user
-      user = await prismaclient.user.create({
-        data: {
-          googleId: profileId,
-          email: email,
-          firstName: profile.name?.givenName || '',
-          lastName: profile.name?.familyName || '',
-          status: 'ACTIVE',
-          emailVerified: true,
-        },
-        select: { 
-          id: true,
-          firstName: true,
-          lastName: true,
-          email: true,
-          phoneNumber: true,
-          role: true,
-          status: true,
-          googleId:true
-        },
-      });
-    }
 
-    // Generate tokens
-    const tokens = await generateAuthToken(user.id);
-    await createUserSession(user.id, req);
-  
-    const {id,googleId, ...userData} = user;
-    return done(null, { userData,  });
-}
+        if (user && !user.googleId) {
+          // Update existing user with Google info
+          user = await prismaclient.user.update({
+            where: { id: user.id },
+            data: {
+              googleId: profileId,
+              emailVerified: true,
+            },
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              phoneNumber: true,
+              role: true,
+              status: true,
+              googleId: true
+            },
+          });
+        } else if (!user) {
+          // Create new user
+          user = await prismaclient.user.create({
+            data: {
+              googleId: profileId,
+              email: email,
+              firstName: profile.name?.givenName || '',
+              lastName: profile.name?.familyName || '',
+              status: 'ACTIVE',
+              emailVerified: true,
+            },
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              phoneNumber: true,
+              role: true,
+              status: true,
+              googleId: true
+            },
+          });
+        }
+
+        // Check user status
+        if (user.status !== 'ACTIVE') {
+          return done(new Error('Account is not active'), undefined);
+        }
+
+        // Generate token
+        const token = await generateAuthToken(user.id);
+        
+        // Create session (only if you're using sessions)
+        // If session: false, you might want to skip this
+        await createUserSession(user.id, req);
+
+        const { id, googleId, ...userData } = user;
+        
+        // ✅ FIXED: Return tokens with user data
+        return done(null, { userData, ...token });
+        
+      } catch (error: any) {
+        console.error('Google Auth Error:', error);
+        return done(error, undefined);
+      }
+    }
   )
 );
 

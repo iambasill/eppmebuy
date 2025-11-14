@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import passport from '../config/passportAuth'
+import passport from '../config/passportAuth';
 
 // Google OAuth initiation
 export const google = (req: Request, res: Response, next: NextFunction) => {
@@ -21,7 +21,7 @@ export const google = (req: Request, res: Response, next: NextFunction) => {
     prompt: prompt,
     state: redirectUri 
   })(req, res, next);
-}
+};
 
 // Specific endpoint for switching accounts
 export const googleSwitch = (req: Request, res: Response, next: NextFunction) => {
@@ -51,56 +51,67 @@ export const googleCallback = (req: Request, res: Response, next: NextFunction) 
     if (err) {
       console.error('Google OAuth Error:', err);
       
-      // Get the redirectUri from state
-      const redirectUri = req.query.state as string ;
+      const redirectUri = req.query.state as string || 'http://localhost:3000';
       
-      // Redirect back to app with error
       return res.redirect(`${redirectUri}?error=${encodeURIComponent(err.message || 'authentication_error')}`);
     }
     
     if (!user) {
       const message = info?.message || 'Authentication failed';
-      const redirectUri = req.query.state as string;
+      const redirectUri = req.query.state as string || 'http://localhost:3000';
       
-      // Redirect back to app with error
       return res.redirect(`${redirectUri}?error=${encodeURIComponent(message)}`);
     }
     
     req.user = user;
     next();
   })(req, res, next);
-}
+};
 
 // Process the callback and redirect back to app
 export const googleCallbackSuccess = (req: Request, res: Response) => {
   try {
     if (!req.user) {
-      const redirectUri = req.query.state as string ;
+      const redirectUri = req.query.state as string || 'http://localhost:3000';
       return res.redirect(`${redirectUri}?error=no_user_data`);
     }
 
-    const { userData, accessToken } = req.user as any;
+    const { userData, accessToken, refreshToken } = req.user as any;
+    
+    // Validate we have required data
+    if (!accessToken || !userData) {
+      console.error('Missing required auth data:', { accessToken: !!accessToken, userData: !!userData });
+      const redirectUri = req.query.state as string || 'http://localhost:3000';
+      return res.redirect(`${redirectUri}?error=missing_auth_data`);
+    }
     
     // Get the redirectUri from the state parameter
-    const redirectUri = req.query.state as string ;
+    const redirectUri = req.query.state as string || 'http://localhost:3000';
 
     // Build the redirect URL with tokens as query parameters
     const params = new URLSearchParams({
-      accessToken: accessToken || '',
-      // Optional: include minimal user data
+      accessToken: accessToken,
       userId: userData?.id || '',
       email: userData?.email || '',
-      name: userData?.name || ''
+      firstName: userData?.firstName || '',
+      lastName: userData?.lastName || '',
+      role: userData?.role || 'USER'
     });
+
+    // Add refreshToken only if it exists
+    if (refreshToken) {
+      params.append('refreshToken', refreshToken);
+    }
 
     const redirectUrl = `${redirectUri}?${params.toString()}`;
 
-    // ✅ REDIRECT instead of returning JSON
+    console.log('Redirecting to:', redirectUrl); // Debug log
+
     return res.redirect(redirectUrl);
 
   } catch (error: any) {
     console.error('Callback processing error:', error);
-    const redirectUri = req.query.state as string;
+    const redirectUri = req.query.state as string || 'http://localhost:3000';
     return res.redirect(`${redirectUri}?error=${encodeURIComponent(error.message || 'processing_error')}`);
   }
-}
+};
