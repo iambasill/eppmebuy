@@ -119,7 +119,7 @@ export const getEventsController = async (req: Request, res: Response) => {
   const skip = (page - 1) * limit;
 
   // Build where clause
-  const where: any = {};
+  const where: any = null;
   
   if (category) where.category = category;
   if (status) where.status = status;
