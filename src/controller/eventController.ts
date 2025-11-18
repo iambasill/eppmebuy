@@ -146,7 +146,7 @@ export const getEventsController = async (req: Request, res: Response) => {
 
   const [events, total] = await Promise.all([
     prismaclient.event.findMany({
-      // where,
+      where,
       skip,
       take: limit,
       orderBy: { [sortBy]: sortOrder },

@@ -119,12 +119,12 @@ export const getEventsQuerySchema = z.object({
   
   // Filters
   category: z.string().optional(),
-  status: eventStatusEnum.optional().default("PUBLISHED"),
+  status: eventStatusEnum.optional(),
   accessType: eventAccessTypeEnum.optional(),
   city: z.string().optional(),
   country: z.string().optional(),
-  isFeatured: z.string().transform(val => val === "true").optional(),
-  isOnline: z.string().optional().default("true"),
+  isFeatured: z.string().optional(),
+  isOnline: z.string().optional(),
   
   // Date filters
   startDateFrom: z.string().datetime().optional(),
