@@ -10,7 +10,7 @@ import { updateUserProfileSchema } from "../validator/userValidator";
 export const getUserProfileController = async (req:Request,res:Response) => {
  const user = req.user as User
 
- const profile = await prismaclient.user.findUnique({
+ let profile = await prismaclient.user.findUnique({
   where: {
     id: user.id
   },
@@ -37,7 +37,18 @@ export const getUserProfileController = async (req:Request,res:Response) => {
     }
 
     });
-        
+
+    if (!profile) throw new BadRequestError('User profile not found');
+    
+    const preferences = profile?.preferences as { genres?: string[] } | undefined;
+    const genres = preferences?.genres ?? [];
+    
+    profile = {
+        ...profile,
+        preferences: {
+            genres: genres
+        }
+    };
     res.status(200).json({
     status: "success",
     data: {

@@ -5,7 +5,6 @@ import { sanitizeObject } from "../utils/zodHandler"
 export const updateUserSchema= sanitizeObject(z.object({    
   firstName: z.string().optional(), 
   lastName: z.string().optional(),
-    profilePictureUrl: z.string().url().optional(),
     bio: z.string().max(500).optional(),
     gender: z.string().optional(),
     dateOfBirth: z.string().optional(), 
@@ -15,7 +14,6 @@ export const updateUserSchema= sanitizeObject(z.object({
 export const updateUserProfileSchema= sanitizeObject(z.object({    
   firstName: z.string().optional(), 
   lastName: z.string().optional(),
-    profilePictureUrl: z.string().url().optional(),
     bio: z.string().max(500).optional(),
     gender: z.string().optional(),
     dateOfBirth: z.string().optional(), 
