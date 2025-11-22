@@ -3,6 +3,7 @@ import { prismaclient } from "../lib/prisma-postgres";
 import express, { Request, Response, NextFunction } from "express";
 import { User } from "../../generated/prisma";
 import { updateUserProfileSchema } from "../validator/userValidator";
+import { getFileUrls } from "../utils/fileHandler";
 
 
 // ====================== CONTROLLERS ====================== //
@@ -60,14 +61,21 @@ export const getUserProfileController = async (req:Request,res:Response) => {
 
 export const updateUserProfileController = async (req:Request,res:Response) => {
  const user = req.user as User
+  const files = req.files as Express.Multer.File[];
+  
+const profileImage = getFileUrls(files);
+
+
+
  const data =  updateUserProfileSchema.parse(req.body);
 
- const updatedProfile = await prismaclient.user.update({    
+  await prismaclient.user.update({    
     where: {
         id: user.id
     },
     data: {
-        ...data
+        ...data,
+        profilePictureUrl: profileImage[0] || user.profilePictureUrl
     }
     });
     res.status(200).json({

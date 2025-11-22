@@ -10,7 +10,7 @@ export const userRoute = express.Router()
 
 
 userRoute.get('/profile', authMiddleware,getUserProfileController)
-userRoute.put('/profile', authMiddleware, upload.fields(PROFILE_IMAGE) , updateUserProfileController)
+userRoute.patch('/profile', authMiddleware, upload.fields(PROFILE_IMAGE) , updateUserProfileController)
 
 
 
