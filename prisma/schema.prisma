@@ -139,10 +139,10 @@ model User {
   // Optional Fields
   profilePictureUrl     String?   @map("profile_picture_url")
   bio                   String?   @db.Text
-
+  
   
   // Host-Specific Fields
-  address               String?
+  organizationName      String?   @map("organization_name")
   kycStatus             KYCStatus @default(PENDING) @map("kyc_status")
   kycDocuments          Json?     @map("kyc_documents") // Document URLs/IDs
   stripeConnectId       String?   @unique @map("stripe_connect_id")
