@@ -15,6 +15,7 @@ import sanitize from "sanitize-html";
 
 export const createEventController = async (req: Request, res: Response, next: NextFunction) => {
   const user = req.user as User;
+  //TODO: Handle idempotency
   const idempotencyKey = req.header('Idempotency-Key') 
 
   // const valid = await prismaclient.idempontency_key.findFirst({

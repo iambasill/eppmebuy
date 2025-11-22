@@ -9,6 +9,7 @@ datasource db {
 }
 
 
+
 // ============================================
 // ENUMS
 // ============================================
@@ -19,7 +20,6 @@ enum UserRole {
 }
 
 enum KYCStatus {
-  NOT_REQUIRED
   PENDING
   SUBMITTED
   APPROVED
@@ -129,8 +129,10 @@ model User {
   password              String?    // Hashed
   googleId             String?   @unique @map("google_id")
   facebookId           String?   @unique @map("facebook_id")
+  //TODO: change otp to otpHash for security
   otp                  String?    @map("otp")
-
+  gender                String?  @map("gender")
+  dateOfBirth          DateTime? @map("date_of_birth")
   
   role                  UserRole  @default(ATTENDEE)
   status                String    @default("ACTIVE") // ACTIVE, BLOCKED, SUSPENDED
@@ -141,7 +143,7 @@ model User {
   // Host-Specific Fields
   organizationName      String?   @map("organization_name")
   address               String?
-  kycStatus             KYCStatus @default(NOT_REQUIRED) @map("kyc_status")
+  kycStatus             KYCStatus @default(PENDING) @map("kyc_status")
   kycDocuments          Json?     @map("kyc_documents") // Document URLs/IDs
   stripeConnectId       String?   @unique @map("stripe_connect_id")
   paystackSubaccountId  String?   @unique @map("paystack_subaccount_id")
@@ -176,10 +178,28 @@ model User {
   checkIns              CheckIn[] @relation("Scanner")
   notifications         Notification[]
   payouts               Payout[]
+  followers    UserFollow[]  @relation("UserFollowing")
+  following    UserFollow[]  @relation("UserFollower")
   
   @@index([email])
   @@index([role])
   @@map("users")
+}
+
+model UserFollow {
+  id           String    @id @default(cuid())
+  followerId   String    @map("follower_id")
+  followingId  String    @map("following_id")
+  
+  follower     User      @relation("UserFollower", fields: [followerId], references: [id], onDelete: Cascade)
+  following    User      @relation("UserFollowing", fields: [followingId], references: [id], onDelete: Cascade)
+  
+  createdAt    DateTime  @default(now()) @map("created_at")
+  
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+  @@map("user_follows")
 }
 
 model UserSession {
@@ -736,4 +756,15 @@ model idempontency_key {
   key                   String          @map("key")
 
 
+}
+
+
+model customer_support {
+  id                    String    @id @default(cuid())
+  userId                String    @map("user_id")
+  name                  String    @map("name")
+  email                 String    @map("email")
+  message               String    @db.Text @map("message")  
+  status                String    @map("status") @default("OPEN")
+  createdAt             DateTime  @default(now()) @map("created_at")
 }

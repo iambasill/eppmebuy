@@ -5,6 +5,7 @@ import {
   loginController,  
   registerController, 
   resetPasswordController, 
+  supportController, 
   verifyResetTokenController
 } from '../controller/authController'
 import { authMiddleware } from '../middlewares/authMiddleware'
@@ -20,6 +21,8 @@ authRoute.post('/reset-password', resetPasswordController)
 authRoute.post('/verify-otp', verifyResetTokenController)
 authRoute.post('/forgot-password', forgotPasswordController)
 authRoute.post('/change-password', authMiddleware, changePasswordController)
+authRoute.post('/support', authMiddleware, supportController)
+
 
 // Auth failure handler
 authRoute.get('/failure', (req, res) => {

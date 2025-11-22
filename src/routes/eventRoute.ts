@@ -11,6 +11,7 @@ import {
 } from '../controller/eventController';
 import { authMiddleware } from '../middlewares/authMiddleware';
 import upload  from '../services/multer'; // Import your multer config
+import { COVER_IMAGES } from '../validator/uploadFields';
 
 export const eventRoute = express.Router();
 
@@ -30,7 +31,7 @@ eventRoute.get('/my/events', authMiddleware, getMyEventsController);
 
 eventRoute.put('/:id', 
   authMiddleware, 
-  upload.array('coverImages', 5), // Optional: new images on update
+  upload.fields(COVER_IMAGES), 
   updateEventController
 );
 

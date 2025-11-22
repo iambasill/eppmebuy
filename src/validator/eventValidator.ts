@@ -138,6 +138,7 @@ export const getEventsQuerySchema = z.object({
   sortOrder: z.enum(["asc", "desc"]).default("asc"),
 })
 
+
 // Type exports
 export type CreateEventInput = z.infer<typeof createEventSchema>
 export type UpdateEventInput = z.infer<typeof updateEventSchema>

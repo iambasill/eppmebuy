@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from "express";
 import { BadRequestError, UnAuthorizedError } from "../logger/exceptions";
-import { signupSchema, loginSchema, changePasswordSchema,  forgotPasswordSchema, resetPasswordSchema, verifyOtpSchema } from "../validator/authValidator";
+import { signupSchema, loginSchema, changePasswordSchema,  forgotPasswordSchema, resetPasswordSchema, verifyOtpSchema, supportSchema } from "../validator/authValidator";
 import bcrypt from 'bcrypt';
 import { prismaclient } from "../lib/prisma-postgres";
 import { createUserSession, generateAuthToken, generateToken, verifyToken } from "../utils/func";
@@ -167,5 +167,23 @@ export const resetPasswordController = async (req: Request, res: Response) => {
 };
 
 
+export const supportController = async (req: Request, res: Response) => {
+  const user = req.user as User;
+  const data = supportSchema.parse(req.body);
+  //
+  await prismaclient.customer_support.create({
+    data: {
+      userId: user.id,
+      ...data
+    }
+  });
+
+  //TODO: send confirmation email to user and notification to support team
+  //
+  res.status(201).json({
+    status: "success",
+    message: "Support request submitted successfully"
+  });
+}
 
 // ====================== END CONTROLLERS ====================== //
