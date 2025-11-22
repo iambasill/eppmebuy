@@ -3,5 +3,5 @@ export const COVER_IMAGES = [
 ];
 
 export const PROFILE_IMAGE = [
-    { name: 'profileimage', maxCount: 1 },
+    { name: 'profileImage', maxCount: 1 },
 ];
