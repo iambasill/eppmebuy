@@ -139,9 +139,9 @@ model User {
   // Optional Fields
   profilePictureUrl     String?   @map("profile_picture_url")
   bio                   String?   @db.Text
+
   
   // Host-Specific Fields
-  organizationName      String?   @map("organization_name")
   address               String?
   kycStatus             KYCStatus @default(PENDING) @map("kyc_status")
   kycDocuments          Json?     @map("kyc_documents") // Document URLs/IDs
