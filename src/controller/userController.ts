@@ -62,8 +62,8 @@ export const getUserProfileController = async (req:Request,res:Response) => {
 export const updateUserProfileController = async (req:Request,res:Response) => {
  const user = req.user as User
   const files = req.files as Express.Multer.File[];
-  
-const profileImage = getFileUrls(files);
+  let profileImage: string[] = [];
+  if (files)  profileImage = getFileUrls(files);
 
 
 
