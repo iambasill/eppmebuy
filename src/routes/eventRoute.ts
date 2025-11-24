@@ -23,7 +23,8 @@ eventRoute.get('/:id', authMiddleware ,getEventController);
 // Multiple file upload for cover images (max 5 images)
 eventRoute.post('/', 
   authMiddleware, 
-  upload.array('coverImages', 5), // Field name 'coverImages', max 5 files
+  upload.fields(COVER_IMAGES)
+  , // Field name 'coverImages', max 5 files
   createEventController
 );
 

@@ -9,7 +9,7 @@ import { PROFILE_IMAGE } from '../validator/uploadFields'
 export const userRoute = express.Router()
 
 
-userRoute.get('/profile', authMiddleware,getUserProfileController)
+userRoute.get('/profile', authMiddleware, getUserProfileController)
 userRoute.patch('/profile', authMiddleware, upload.fields(PROFILE_IMAGE) , updateUserProfileController)
 
 
