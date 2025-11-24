@@ -132,7 +132,7 @@ model User {
   //TODO: change otp to otpHash for security
   otp                  String?    @map("otp")
   gender                String?  @map("gender")
-  dateOfBirth          DateTime? @map("date_of_birth")
+  dateOfBirth          String? @map("date_of_birth")
   
   role                  UserRole  @default(ATTENDEE)
   status                String    @default("ACTIVE") // ACTIVE, BLOCKED, SUSPENDED
