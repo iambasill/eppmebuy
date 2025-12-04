@@ -67,7 +67,7 @@ export const updateUserProfileController = async (req:Request,res:Response) => {
 
 
 
- const data =  updateUserProfileSchema.parse(req.body);
+ const {genres , ...data} =  updateUserProfileSchema.parse(req.body);
 
   await prismaclient.user.update({    
     where: {
@@ -75,6 +75,9 @@ export const updateUserProfileController = async (req:Request,res:Response) => {
     },
     data: {
         ...data,
+        preferences: {
+            genres: genres
+        },
         profilePictureUrl: profileImage[0] || user.profilePictureUrl
     }
     });

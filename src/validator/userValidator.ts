@@ -17,7 +17,8 @@ export const updateUserProfileSchema= sanitizeObject(z.object({
     bio: z.string().max(500).optional(),
     gender: z.string().optional(),
     dateOfBirth: z.string().optional(), 
-    phoneNumber: z.string().optional(),          
+    phoneNumber: z.string().optional(), 
+    genres : z.array(z.string()).optional()        
 }))
 
 
