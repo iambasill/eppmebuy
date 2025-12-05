@@ -11,13 +11,14 @@ const app = express()
 
 
 app.use(cors(
-//   {
-//   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-//   allowedHeaders: ['Content-Type', 'Authorization'],
-//   origin: config.CLIENT_URL,
-//   credentials: true,
-// }
+  {
+  methods: ['GET', 'POST', 'PUT', 'DELETE','IdempotencyKey'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+}
 ));
+
+
 
 // Rate limiting
 // const limiter = rateLimit({
