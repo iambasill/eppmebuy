@@ -6,6 +6,7 @@ import {
   registerController, 
   resetPasswordController, 
   supportController, 
+  verifyEmailController, 
   verifyResetTokenController
 } from '../controller/authController'
 import { authMiddleware } from '../middlewares/authMiddleware'
@@ -19,6 +20,8 @@ authRoute.post('/login', loginController)
 authRoute.post('/signup', registerController)
 authRoute.post('/reset-password', resetPasswordController)
 authRoute.post('/verify-otp', verifyResetTokenController)
+authRoute.post('/verify-email', verifyEmailController)
+
 authRoute.post('/forgot-password', forgotPasswordController)
 authRoute.post('/change-password', authMiddleware, changePasswordController)
 authRoute.post('/support', authMiddleware, supportController)

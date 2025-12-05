@@ -29,10 +29,17 @@ export const registerController = async (req: Request, res: Response, next: Next
     data: { email, firstName, lastName, role: userRole, password: hashedPassword, phoneNumber }
   });
 
+   const otp = await generateOtp();
+
+    await prismaclient.user.update({
+    where: { email },
+    data: { otp }
+  });
   // (Optional) Send verification email here.
 
   res.status(201).send({
     success: true,
+    otp:otp,
     message: "User created successfully. Please verify your email.",
   });
 };
@@ -46,9 +53,21 @@ export const registerController = async (req: Request, res: Response, next: Next
 export const loginController = async (req: Request, res: Response) => {
   const { email, password } = loginSchema.parse(req.body);
 
-  const user = await prismaclient.user.findFirst({ where: { email } , select:{id:true,password:true, status:true, email:true, firstName:true, lastName:true, role:true, phoneNumber:true}});
-  if (!user || user.status === 'BLOCKED') throw new BadRequestError("Invalid Credentials");
+  const user = await prismaclient.user.findFirst({ where: { email } , select:{id:true,password:true, status:true, email:true, firstName:true, lastName:true, role:true, phoneNumber:true, emailVerified:true}});
+  if (!user || user.status === 'BLOCKED') throw new UnAuthorizedError("Access Denied!");
+  if (!user.emailVerified) {
+    const otp = await generateOtp();
+    await prismaclient.user.update({
+    where: { email },
+    data: { otp }
+  });
+    return res.status(201).send({
+    success: true,
+    otp:otp,
+    message: "Please verify your email.",
+  });
 
+  }
   const isPasswordValid = await bcrypt.compare(password, user.password || "password");
   if (!isPasswordValid) throw new BadRequestError("Invalid Credentials");
 
@@ -62,7 +81,6 @@ export const loginController = async (req: Request, res: Response) => {
   res.status(200).send({
     success: true,
     accessToken,
-    user: userData,
   });
 };
 
@@ -111,9 +129,51 @@ export const forgotPasswordController = async (req: Request, res: Response) => {
 };
 
 
+/**
+ * verify Email
+ */
+
+export const verifyEmailController = async (req: Request, res: Response) => {
+  const { email, otp } = resetPasswordSchema.parse(req.body);
+
+  if (!otp) throw new BadRequestError("Invalid or expired token");
+
+  const user = await prismaclient.user.findFirst({
+    where: {
+      email ,
+      otp
+    }
+  });
+  if (!user) throw new BadRequestError("Invalid or expired token");
+
+  const validToken = await verifyOtp(otp);
+  if (!validToken) throw new BadRequestError("Invalid or expired token");
+
+  await prismaclient.user.update({
+    where: {
+      email,
+      otp
+    },
+    data:{
+      emailVerified:true,
+      otp:null
+    }
+  })
+  const accessToken = await generateAuthToken(user.id);
+
+  await createUserSession(user.id, req);
+
+
+  res.status(200).send({
+    success: true,
+    accessToken,
+  });
+};
+
+
 
 /**
- * verify token.
+ * verify reset token.
  */
 
 export const verifyResetTokenController = async (req: Request, res: Response) => {
