@@ -61,8 +61,8 @@ export const loginController = async (req: Request, res: Response) => {
     where: { email },
     data: { otp }
   });
-    return res.status(201).send({
-    success: true,
+    return res.status(200).send({
+    status: "unverified",
     otp:otp,
     message: "Please verify your email.",
   });
