@@ -80,6 +80,7 @@ export const loginController = async (req: Request, res: Response) => {
 
   res.status(200).send({
     success: true,
+    status: "verified",
     accessToken,
   });
 };
