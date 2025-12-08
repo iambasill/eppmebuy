@@ -59,31 +59,32 @@ export const getUserProfileController = async (req:Request,res:Response) => {
 }
 
 
-export const updateUserProfileController = async (req:Request,res:Response) => {
- const user = req.user as User
-  const files = req.files as Express.Multer.File[];
-  let profileImage: string[] = [];
-  if (files)  profileImage = getFileUrls(files);
+export const updateUserProfileController = async (req: Request, res: Response) => {
+  const user = req.user as User;
 
+  const files = Array.isArray((req.files as any)?.profileImage)
+    ? (req.files as any).profileImage
+    : [];
 
+  const profileImage = getFileUrls(files);
 
- const {genres , ...data} =  updateUserProfileSchema.parse(req.body);
+  const { genres, ...data } = updateUserProfileSchema.parse(req.body);
 
-  await prismaclient.user.update({    
+  await prismaclient.user.update({
     where: {
-        id: user.id
+      id: user.id,
     },
     data: {
-        ...data,
-        preferences: {
-            genres: genres
-        },
-        profilePictureUrl: profileImage[0] || user.profilePictureUrl
-    }
-    });
-    res.status(200).json({
-    status: "success",
-    message: "Profile updated successfully"
-    });
+      ...data,
+      preferences: {
+        genres: genres,
+      },
+      profilePictureUrl: profileImage[0] || user.profilePictureUrl,
+    },
+  });
 
-}  
+  res.status(200).json({
+    status: "success",
+    message: "Profile updated successfully",
+  });
+};
