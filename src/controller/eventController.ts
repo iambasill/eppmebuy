@@ -10,25 +10,27 @@ import { User } from "../../generated/prisma";
 import slugify from "slugify";
 import { getFileUrls } from "../utils/fileHandler";
 import sanitize from "sanitize-html";
+import { calculateDistance, getBoundingBox } from "../utils/func";
 
 // ====================== CONTROLLERS ====================== //
 
 export const createEventController = async (req: Request, res: Response, next: NextFunction) => {
   const user = req.user as User;
   //TODO: Handle idempotency
-  const idempotencyKey = req.header('IdempotencyKey') 
-  if (!idempotencyKey) throw new BadRequestError("No IdempotencyKey at header")
+  const idempotencyKey = req.header('IdempotencyKey');
+  if (!idempotencyKey) throw new BadRequestError("No IdempotencyKey at header");
 
   const valid = await prismaclient.idempontency_key.findFirst({
-    where: {key: idempotencyKey}
-  })
+    where: { key: idempotencyKey }
+  });
 
-    if (valid)  {
-      res.status(201).send({
+  if (valid) {
+    res.status(201).send({
       success: true,
       message: "Event created successfully",
-  });
-  };
+    });
+    return;
+  }
 
   // Get uploaded files from multer
   const files = req.files as Express.Multer.File[];
@@ -37,9 +39,7 @@ export const createEventController = async (req: Request, res: Response, next: N
     throw new BadRequestError("At least one cover image is required");
   }
 
-const coverImages = getFileUrls(files);
-
-
+  const coverImages = getFileUrls(files);
 
   // Merge coverImages with request body
   const validatedData = createEventSchema.parse({
@@ -86,8 +86,8 @@ const coverImages = getFileUrls(files);
   // TODO: Queue job for event created notification
   // await eventQueue.add('event-created', { eventId: event.id });
   await prismaclient.idempontency_key.create({
-    data: {key: idempotencyKey as string}
-  })
+    data: { key: idempotencyKey as string }
+  });
 
   res.status(201).send({
     success: true,
@@ -100,7 +100,6 @@ const coverImages = getFileUrls(files);
  */
 export const getEventsController = async (req: Request, res: Response) => {
   const query = getEventsQuerySchema.parse(req.query);
-  
   const {
     page,
     limit,
@@ -116,8 +115,12 @@ export const getEventsController = async (req: Request, res: Response) => {
     search,
     sortBy,
     sortOrder,
+    latitude,    
+    longitude,
+    radius = "50", // Default radius in km
   } = query;
 
+  const radiusNum = parseInt(radius);
   const skip = (page - 1) * limit;
 
   // Build where clause
@@ -146,63 +149,116 @@ export const getEventsController = async (req: Request, res: Response) => {
     ];
   }
 
-  const [events, total] = await Promise.all([
-    prismaclient.event.findMany({
-      where,
-      skip,
-      take: limit,
-      orderBy: { [sortBy]: sortOrder },
-      include: {
-        host: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            organizationName: true,
-            profilePictureUrl: true,
-          }
-        },
-        ticketTiers: {
-          where: { isVisible: true },
-          select: {
-            id: true,
-            name: true,
-            priceCents: true,
-            currency: true,
-            quantity: true,
-            quantitySold: true,
-          }
-        },
-        _count: {
-          select: {
-            reviews: true,
-            favorites: true,
-          }
-        },
-        orders: true
+  // Location-based filtering with bounding box (pre-filter optimization)
+  if (latitude !== undefined && longitude !== undefined) {
+    const bbox = getBoundingBox(parseFloat(latitude), parseFloat(longitude), radiusNum);
+    
+    where.AND = [
+      ...(where.AND || []),
+      { latitude: { gte: bbox.minLat, lte: bbox.maxLat } },
+      { longitude: { gte: bbox.minLon, lte: bbox.maxLon } },
+      // Exclude events with null coordinates
+      { latitude: { not: null } },
+      { longitude: { not: null } },
+    ];
+  }
 
-      }
-    }),
-    prismaclient.event.count({ where }),
-  ]);
-
-  res.status(200).send({
-    success: true,
-    data: events,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-    },
+  // Fetch events
+  let events = await prismaclient.event.findMany({
+    where,
+    ...(latitude === undefined || longitude === undefined ? { skip, take: limit } : {}),
+    ...((latitude === undefined || longitude === undefined)
+      ? { orderBy: { [sortBy]: sortOrder } } 
+      : {}),
+    include: {
+      host: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          organizationName: true,
+          profilePictureUrl: true,
+        }
+      },
+      ticketTiers: {
+        where: { isVisible: true },
+        select: {
+          id: true,
+          name: true,
+          priceCents: true,
+          currency: true,
+          quantity: true,
+          quantitySold: true,
+        }
+      },
+      _count: {
+        select: {
+          reviews: true,
+          favorites: true,
+        }
+      },
+      orders: true
+    }
   });
+
+  // Calculate distances and filter by radius if location is provided
+  if (latitude !== undefined && longitude !== undefined) {
+    events = events
+      .map(event => ({
+        ...event,
+        distance: event.latitude && event.longitude 
+          ? calculateDistance(
+              parseFloat(latitude), 
+              parseFloat(longitude), 
+              parseFloat(event.latitude.toString()), 
+              parseFloat(event.longitude.toString())
+            )
+          : null,
+      }))
+      .filter(event => event.distance === null || event.distance <= radiusNum)
+      .sort((a, b) => {
+        // Always sort by distance when location is provided (closest first)
+        if (a.distance === null) return 1;
+        if (b.distance === null) return -1;
+        return a.distance - b.distance;
+      });
+    
+    // Apply pagination after filtering and sorting
+    const total = events.length;
+    events = events.slice(skip, skip + limit);
+    
+    res.status(200).send({
+      success: true,
+      data: events,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } else {
+    // No location filtering - use database count
+    const total = await prismaclient.event.count({ where });
+    
+    res.status(200).send({
+      success: true,
+      data: events,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  }
 };
 
 /**
  * Get single event by ID or slug.
  */
 export const getEventController = async (req: Request, res: Response) => {
-  const  id  = sanitize(req.params.id);
+  const id = sanitize(req.params.id);
   
   const event = await prismaclient.event.findFirst({
     where: {
@@ -300,7 +356,6 @@ export const updateEventController = async (req: Request, res: Response) => {
     const newCoverImages = files.map(file => file.path || file.filename);
     updatePayload.coverImages = newCoverImages;
   }
-
 
   const validatedData = updateEventSchema.parse(updatePayload);
 

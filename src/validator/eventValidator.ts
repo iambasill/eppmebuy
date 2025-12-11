@@ -129,7 +129,9 @@ export const getEventsQuerySchema = z.object({
   // Date filters
   startDateFrom: z.string().datetime().optional(),
   startDateTo: z.string().datetime().optional(),
-  
+  latitude: z.string().optional(),    
+  longitude: z.string().optional(),
+  radius: z.string().optional().default("50"),
   // Search
   search: z.string().optional(),
   
