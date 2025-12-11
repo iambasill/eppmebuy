@@ -136,7 +136,7 @@ export const getEventsQuerySchema = z.object({
   search: z.string().optional(),
   
   // Sorting
-  sortBy: z.enum(["startDateTime", "createdAt", "viewCount", "ticketsSold", "averageRating"]).default("startDateTime"),
+  sortBy: z.enum(["startDateTime", "createdAt", "viewCount", "ticketsSold", "averageRating","distance"]).default("startDateTime"),
   sortOrder: z.enum(["asc", "desc"]).default("asc"),
 })
 

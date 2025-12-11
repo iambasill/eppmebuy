@@ -169,7 +169,7 @@ export const getEventsController = async (req: Request, res: Response) => {
     // Don't apply skip/take yet if we're doing location sorting
     ...(latitude === undefined || longitude === undefined ? { skip, take: limit } : {}),
     // Only apply orderBy if not sorting by distance and no location provided
-    ...((latitude === undefined || longitude === undefined) 
+    ...((latitude === undefined || longitude === undefined) && sortBy !== 'distance' 
       ? { orderBy: { [sortBy]: sortOrder } } 
       : {}),
     include: {
