@@ -155,8 +155,8 @@ export const getEventsController = async (req: Request, res: Response) => {
     
     where.AND = [
       ...(where.AND || []),
-      { latitude: { gte: bbox.minLat, lte: bbox.maxLat } },
-      { longitude: { gte: bbox.minLon, lte: bbox.maxLon } },
+      { latitude: { gte: bbox.minLat.toString(), lte: bbox.maxLat.toString() } },
+      { longitude: { gte: bbox.minLon.toString(), lte: bbox.maxLon.toString() } },
       // Exclude events with null coordinates
       { latitude: { not: null } },
       { longitude: { not: null } },
@@ -166,8 +166,10 @@ export const getEventsController = async (req: Request, res: Response) => {
   // Fetch events
   let events = await prismaclient.event.findMany({
     where,
+    // Don't apply skip/take yet if we're doing location sorting
     ...(latitude === undefined || longitude === undefined ? { skip, take: limit } : {}),
-    ...((latitude === undefined || longitude === undefined)
+    // Only apply orderBy if not sorting by distance and no location provided
+    ...((latitude === undefined || longitude === undefined) 
       ? { orderBy: { [sortBy]: sortOrder } } 
       : {}),
     include: {
