@@ -35,7 +35,7 @@ export const createEventController = async (req: Request, res: Response, next: N
   // Get uploaded files from multer
   
   const files = Array.isArray((req.files as any)?.coverImages)
-    ? (req.files as any).profileImage
+    ? (req.files as any).coverImages
     : [];
 
   const coverImages = getFileUrls(files);
