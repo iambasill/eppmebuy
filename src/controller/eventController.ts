@@ -33,13 +33,16 @@ export const createEventController = async (req: Request, res: Response, next: N
   }
 
   // Get uploaded files from multer
-  const files = req.files as Express.Multer.File[];
   
-  if (!files || files.length === 0) {
-    throw new BadRequestError("At least one cover image is required");
-  }
+  const files = Array.isArray((req.files as any)?.coverImages)
+    ? (req.files as any).profileImage
+    : [];
 
   const coverImages = getFileUrls(files);
+  
+  if (!coverImages || coverImages.length === 0) {
+    throw new BadRequestError("At least one cover image is required");
+  }
 
   // Merge coverImages with request body
   const validatedData = createEventSchema.parse({
