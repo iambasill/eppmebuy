@@ -95,6 +95,7 @@ export const createEventController = async (req: Request, res: Response, next: N
   res.status(201).send({
     success: true,
     message: "Event created successfully",
+    eventId:event.id
   });
 };
 
