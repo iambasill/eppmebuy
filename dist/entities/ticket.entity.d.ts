@@ -1,0 +1,31 @@
+import { TicketStatus } from './enums/index.js';
+import { Order } from './order.entity.js';
+import { Event } from './event.entity.js';
+import { TicketTier } from './ticket-tier.entity.js';
+import { User } from './user.entity.js';
+import { CheckIn } from './check-in.entity.js';
+export declare class Ticket {
+    id: string;
+    ticketId: string;
+    orderId: string;
+    order: Order;
+    eventId: string;
+    event: Event;
+    ticketTierId: string;
+    ticketTier: TicketTier;
+    ownerId: string;
+    owner: User;
+    issuedTo: string;
+    issuedToEmail: string;
+    seatNumber: string;
+    seatZone: string;
+    qrCodeData: string;
+    qrCodeImageUrl: string;
+    status: TicketStatus;
+    issuedAt: Date;
+    expiresAt: Date;
+    usedAt: Date;
+    createdAt: Date;
+    updatedAt: Date;
+    checkIns: CheckIn[];
+}

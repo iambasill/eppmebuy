@@ -1,0 +1,35 @@
+import { OrderStatus, PaymentStatus } from './enums/index.js';
+import { User } from './user.entity.js';
+import { Event } from './event.entity.js';
+import { PromoCode } from './promo-code.entity.js';
+import { OrderItem } from './order-item.entity.js';
+import { Ticket } from './ticket.entity.js';
+import { Refund } from './refund.entity.js';
+export declare class Order {
+    id: string;
+    orderReference: string;
+    userId: string;
+    user: User;
+    eventId: string;
+    event: Event;
+    status: OrderStatus;
+    subtotalCents: number;
+    platformFeeCents: number;
+    hostFeeCents: number;
+    taxCents: number;
+    discountCents: number;
+    totalCents: number;
+    currency: string;
+    promoCodeId: string;
+    promoCode: PromoCode;
+    attendeeInfo: any;
+    paymentProvider: string;
+    paymentIntentId: string;
+    paymentStatus: PaymentStatus;
+    paidAt: Date;
+    createdAt: Date;
+    updatedAt: Date;
+    orderItems: OrderItem[];
+    tickets: Ticket[];
+    refunds: Refund[];
+}
