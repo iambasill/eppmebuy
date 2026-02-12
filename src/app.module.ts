@@ -1,12 +1,17 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import appConfig from './config/app.config.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { TicketModule } from './modules/ticket/ticket.module.js';
 import { UploadModule } from './modules/upload/upload.module.js';
+import { UserModule } from './modules/user/user.module.js';
+import { OtpModule } from './modules/otp/otp.module.js';
+import { NotificationModule } from './modules/notification/notification.module.js';
+import { mailerConfig, twilioConfig } from './modules/notification/config/notificaton.config.js';
 import { APP_FILTER } from '@nestjs/core';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter.js';
 import * as entities from './entities/index.js';
@@ -15,8 +20,9 @@ import * as entities from './entities/index.js';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig],
+      load: [appConfig, mailerConfig, twilioConfig],
     }),
+    EventEmitterModule.forRoot(),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
@@ -36,6 +42,9 @@ import * as entities from './entities/index.js';
     AuthModule,
     TicketModule,
     UploadModule,
+    UserModule,
+    OtpModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [

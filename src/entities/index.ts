@@ -18,6 +18,8 @@ import { SearchHistory } from './search-history.entity.js';
 import { UserEventScore } from './user-event-score.entity.js';
 import { Notification } from './notification.entity.js';
 import { CustomerSupport } from './customer-support.entity.js';
+import { UserSession } from './user-session.entity.js';
+import { Otp } from './otp.entity.js';
 
 export * from './user.entity.js';
 export * from './event.entity.js';
@@ -39,6 +41,8 @@ export * from './search-history.entity.js';
 export * from './user-event-score.entity.js';
 export * from './notification.entity.js';
 export * from './customer-support.entity.js';
+export * from './user-session.entity.js';
+export * from './otp.entity.js';
 export * from './enums/index.js';
 
 export const ENTITIES = [
@@ -62,4 +66,6 @@ export const ENTITIES = [
     UserEventScore,
     Notification,
     CustomerSupport,
+    UserSession,
+    Otp,
 ];

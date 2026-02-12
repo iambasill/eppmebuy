@@ -21,6 +21,7 @@ import { Payout } from './payout.entity.js';
 import { CheckIn } from './check-in.entity.js';
 import { Event } from './event.entity.js';
 import { CustomerSupport } from './customer-support.entity.js';
+import { UserSession } from './user-session.entity.js';
 
 @Entity('users')
 export class User {
@@ -117,4 +118,7 @@ export class User {
 
     @OneToMany(() => CustomerSupport, (cs) => cs.user)
     supportRequests: CustomerSupport[];
+
+    @OneToMany(() => UserSession, (session) => session.user)
+    sessions: UserSession[];
 }

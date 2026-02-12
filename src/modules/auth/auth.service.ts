@@ -6,6 +6,9 @@ import * as jwt from 'jsonwebtoken';
 import { User } from '../../entities/user.entity.js';
 import { UserStatus } from '../../entities/enums/index.js';
 import { CustomerSupport } from '../../entities/customer-support.entity.js';
+import { UserSession } from '../../entities/user-session.entity.js';
+import { OtpService } from '../otp/otp.service.js';
+import { CreateUserSessionDto } from '../user/dto/user.session.dto.js';
 
 @Injectable()
 export class AuthService {
@@ -17,6 +20,9 @@ export class AuthService {
         private readonly userRepository: Repository<User>,
         @InjectRepository(CustomerSupport)
         private readonly supportRepository: Repository<CustomerSupport>,
+        @InjectRepository(UserSession)
+        private readonly sessionRepository: Repository<UserSession>,
+        private readonly otpService: OtpService,
     ) { }
 
     async handleGoogleLogin(
@@ -105,5 +111,19 @@ export class AuthService {
         // TODO: send confirmation email to user and notification to support team
 
         return supportRequest;
+    }
+
+    async newSession(session: CreateUserSessionDto) {
+        try {
+            const newSession = this.sessionRepository.create(session);
+            await this.sessionRepository.save(newSession);
+        } catch (error) {
+            this.logger.error(`Failed to create session: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            throw error;
+        }
+    }
+
+    async verifyAccount(email: string, token: string) {
+        await this.otpService.verifyOtpCode(email, token);
     }
 }
