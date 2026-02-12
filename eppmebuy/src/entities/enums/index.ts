@@ -1,0 +1,103 @@
+export enum UserRole {
+  HOST = 'HOST',
+  ATTENDEE = 'ATTENDEE',
+}
+
+export enum KYCStatus {
+  PENDING = 'PENDING',
+  SUBMITTED = 'SUBMITTED',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+}
+
+export enum PaymentMethodType {
+  CARD = 'CARD',
+  BANK_ACCOUNT = 'BANK_ACCOUNT',
+  MOBILE_MONEY = 'MOBILE_MONEY',
+  WALLET = 'WALLET',
+  BANK_TRANSFER = 'BANK_TRANSFER',
+}
+
+export enum EventStatus {
+  DRAFT = 'DRAFT',
+  PUBLISHED = 'PUBLISHED',
+  CANCELLED = 'CANCELLED',
+  COMPLETED = 'COMPLETED',
+}
+
+export enum EventAccessType {
+  PUBLIC = 'PUBLIC',
+  INVITE_ONLY = 'INVITE_ONLY',
+  PRIVATE = 'PRIVATE',
+}
+
+export enum TicketStatus {
+  ACTIVE = 'ACTIVE',
+  USED = 'USED',
+  REFUNDED = 'REFUNDED',
+  CANCELLED = 'CANCELLED',
+  EXPIRED = 'EXPIRED',
+}
+
+export enum OrderStatus {
+  PENDING = 'PENDING',
+  PROCESSING = 'PROCESSING',
+  CONFIRMED = 'CONFIRMED',
+  FAILED = 'FAILED',
+  REFUNDED = 'REFUNDED',
+  PARTIALLY_REFUNDED = 'PARTIALLY_REFUNDED',
+}
+
+export enum PaymentStatus {
+  PENDING = 'PENDING',
+  PROCESSING = 'PROCESSING',
+  SUCCEEDED = 'SUCCEEDED',
+  FAILED = 'FAILED',
+  REFUNDED = 'REFUNDED',
+  PARTIALLY_REFUNDED = 'PARTIALLY_REFUNDED',
+}
+
+export enum RefundStatus {
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+  COMPLETED = 'COMPLETED',
+}
+
+export enum CheckInMethod {
+  QR_SCAN = 'QR_SCAN',
+  MANUAL = 'MANUAL',
+  KIOSK = 'KIOSK',
+}
+
+export enum QRScanMode {
+  SINGLE_USE = 'SINGLE_USE',
+  MULTI_USE = 'MULTI_USE',
+}
+
+export enum InteractionType {
+  VIEW = 'VIEW',
+  CLICK = 'CLICK',
+  SHARE = 'SHARE',
+  FAVORITE = 'FAVORITE',
+  SEARCH = 'SEARCH',
+}
+
+export enum DiscountType {
+  PERCENTAGE = 'PERCENTAGE',
+  FIXED_AMOUNT = 'FIXED_AMOUNT',
+}
+
+export enum PayoutStatus {
+  PENDING = 'PENDING',
+  PROCESSING = 'PROCESSING',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+}
+
+export enum UserStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  SUSPENDED = 'SUSPENDED',
+  BANNED = 'BANNED',
+}
