@@ -3,6 +3,7 @@ import { Ticket } from '../../entities/ticket.entity.js';
 import { Order } from '../../entities/order.entity.js';
 import { TicketStatus } from '../../entities/enums/index.js';
 import { GetMyTicketsDto } from './dto/get-my-tickets.dto.js';
+import { CreateTicketDto } from './dto/create-ticket.dto.js';
 export declare class TicketService {
     private readonly ticketRepository;
     private readonly orderRepository;
@@ -78,4 +79,5 @@ export declare class TicketService {
         activeTickets: number;
         totalSpentCents: number;
     }>;
+    createTicket(data: CreateTicketDto): Promise<Ticket>;
 }

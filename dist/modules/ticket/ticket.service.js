@@ -193,6 +193,17 @@ let TicketService = class TicketService {
             totalSpentCents: totalSpentResult ? parseInt(totalSpentResult.total || '0', 10) : 0,
         };
     }
+    async createTicket(data) {
+        const ticket = this.ticketRepository.create({
+            ...data,
+            ticketId: data.ticketId || `TKT-${Math.random().toString(36).substring(2, 9).toUpperCase()}`,
+            qrCodeData: data.qrCodeData || `QR-${Math.random().toString(36).substring(2, 15)}`,
+            qrCodeImageUrl: data.qrCodeImageUrl || 'https://placeholder.com/qr',
+            status: index_js_1.TicketStatus.ACTIVE,
+            seatNumber: data.seatNumber || 'N/A',
+        });
+        return await this.ticketRepository.save(ticket);
+    }
 };
 exports.TicketService = TicketService;
 exports.TicketService = TicketService = __decorate([

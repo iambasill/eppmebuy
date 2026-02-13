@@ -46,12 +46,17 @@ exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const typeorm_1 = require("@nestjs/typeorm");
+const event_emitter_1 = require("@nestjs/event-emitter");
 const app_controller_js_1 = require("./app.controller.js");
 const app_service_js_1 = require("./app.service.js");
 const app_config_js_1 = __importDefault(require("./config/app.config.js"));
 const auth_module_js_1 = require("./modules/auth/auth.module.js");
 const ticket_module_js_1 = require("./modules/ticket/ticket.module.js");
 const upload_module_js_1 = require("./modules/upload/upload.module.js");
+const user_module_js_1 = require("./modules/user/user.module.js");
+const otp_module_js_1 = require("./modules/otp/otp.module.js");
+const notification_module_js_1 = require("./modules/notification/notification.module.js");
+const notificaton_config_js_1 = require("./modules/notification/config/notificaton.config.js");
 const core_1 = require("@nestjs/core");
 const all_exceptions_filter_js_1 = require("./common/filters/all-exceptions.filter.js");
 const entities = __importStar(require("./entities/index.js"));
@@ -63,8 +68,9 @@ exports.AppModule = AppModule = __decorate([
         imports: [
             config_1.ConfigModule.forRoot({
                 isGlobal: true,
-                load: [app_config_js_1.default],
+                load: [app_config_js_1.default, notificaton_config_js_1.mailerConfig, notificaton_config_js_1.twilioConfig],
             }),
+            event_emitter_1.EventEmitterModule.forRoot(),
             typeorm_1.TypeOrmModule.forRootAsync({
                 imports: [config_1.ConfigModule],
                 useFactory: (configService) => ({
@@ -84,6 +90,9 @@ exports.AppModule = AppModule = __decorate([
             auth_module_js_1.AuthModule,
             ticket_module_js_1.TicketModule,
             upload_module_js_1.UploadModule,
+            user_module_js_1.UserModule,
+            otp_module_js_1.OtpModule,
+            notification_module_js_1.NotificationModule,
         ],
         controllers: [app_controller_js_1.AppController],
         providers: [

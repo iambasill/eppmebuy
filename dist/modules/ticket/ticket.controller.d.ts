@@ -1,10 +1,12 @@
 import type { Request } from 'express';
 import { TicketService } from './ticket.service.js';
 import { GetMyTicketsDto } from './dto/get-my-tickets.dto.js';
+import { CreateTicketDto } from './dto/create-ticket.dto.js';
 import { ApiResponse } from '../../common/dto/api-response.dto.js';
 export declare class TicketController {
     private readonly ticketService;
     constructor(ticketService: TicketService);
+    createTicket(dto: CreateTicketDto): Promise<ApiResponse<import("../../entities/ticket.entity.js").Ticket>>;
     getMyTickets(req: Request, query: GetMyTicketsDto): Promise<ApiResponse<{
         eventTimingStatus: string;
         isCheckedIn: boolean;

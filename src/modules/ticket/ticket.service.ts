@@ -5,6 +5,7 @@ import { Ticket } from '../../entities/ticket.entity.js';
 import { Order } from '../../entities/order.entity.js';
 import { EventStatus, TicketStatus } from '../../entities/enums/index.js';
 import { GetMyTicketsDto, EventTiming } from './dto/get-my-tickets.dto.js';
+import { CreateTicketDto } from './dto/create-ticket.dto.js';
 
 @Injectable()
 export class TicketService {
@@ -237,5 +238,18 @@ export class TicketService {
             activeTickets,
             totalSpentCents: totalSpentResult ? parseInt(totalSpentResult.total || '0', 10) : 0,
         };
+    }
+
+    async createTicket(data: CreateTicketDto) {
+        const ticket = this.ticketRepository.create({
+            ...data,
+            ticketId: data.ticketId || `TKT-${Math.random().toString(36).substring(2, 9).toUpperCase()}`,
+            qrCodeData: data.qrCodeData || `QR-${Math.random().toString(36).substring(2, 15)}`,
+            qrCodeImageUrl: data.qrCodeImageUrl || 'https://placeholder.com/qr', // Placeholder image URL
+            status: TicketStatus.ACTIVE,
+            seatNumber: data.seatNumber || 'N/A',
+        });
+
+        return await this.ticketRepository.save(ticket);
     }
 }

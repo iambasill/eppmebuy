@@ -205,8 +205,8 @@ export class AuthController {
 
         const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
         const config = this.configService;
-        authUrl.searchParams.set('client_id', config.get('app.google.clientId'));
-        authUrl.searchParams.set('redirect_uri', config.get('app.google.callbackUrl'));
+        authUrl.searchParams.set('client_id', config.get<string>('app.google.clientId') || '');
+        authUrl.searchParams.set('redirect_uri', config.get<string>('app.google.callbackUrl') || '');
         authUrl.searchParams.set('response_type', 'code');
         authUrl.searchParams.set('scope', 'profile email openid');
         authUrl.searchParams.set('access_type', 'offline');
@@ -235,8 +235,8 @@ export class AuthController {
 
         const config = this.configService;
         const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
-        authUrl.searchParams.set('client_id', config.get('app.google.clientId'));
-        authUrl.searchParams.set('redirect_uri', config.get('app.google.callbackUrl'));
+        authUrl.searchParams.set('client_id', config.get<string>('app.google.clientId') || '');
+        authUrl.searchParams.set('redirect_uri', config.get<string>('app.google.callbackUrl') || '');
         authUrl.searchParams.set('response_type', 'code');
         authUrl.searchParams.set('scope', 'profile email openid');
         authUrl.searchParams.set('access_type', 'offline');

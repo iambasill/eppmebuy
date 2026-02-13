@@ -25,6 +25,7 @@ const payout_entity_js_1 = require("./payout.entity.js");
 const check_in_entity_js_1 = require("./check-in.entity.js");
 const event_entity_js_1 = require("./event.entity.js");
 const customer_support_entity_js_1 = require("./customer-support.entity.js");
+const user_session_entity_js_1 = require("./user-session.entity.js");
 let User = class User {
     id;
     firstName;
@@ -57,6 +58,7 @@ let User = class User {
     scannedCheckIns;
     hostedEvents;
     supportRequests;
+    sessions;
 };
 exports.User = User;
 __decorate([
@@ -183,6 +185,10 @@ __decorate([
     (0, typeorm_1.OneToMany)(() => customer_support_entity_js_1.CustomerSupport, (cs) => cs.user),
     __metadata("design:type", Array)
 ], User.prototype, "supportRequests", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => user_session_entity_js_1.UserSession, (session) => session.user),
+    __metadata("design:type", Array)
+], User.prototype, "sessions", void 0);
 exports.User = User = __decorate([
     (0, typeorm_1.Entity)('users')
 ], User);

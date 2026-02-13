@@ -104,5 +104,6 @@ var UserStatus;
     UserStatus["INACTIVE"] = "INACTIVE";
     UserStatus["SUSPENDED"] = "SUSPENDED";
     UserStatus["BANNED"] = "BANNED";
+    UserStatus["PENDING"] = "PENDING";
 })(UserStatus || (exports.UserStatus = UserStatus = {}));
 //# sourceMappingURL=index.js.map

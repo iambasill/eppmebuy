@@ -17,11 +17,16 @@ const common_1 = require("@nestjs/common");
 const ticket_service_js_1 = require("./ticket.service.js");
 const jwt_auth_guard_js_1 = require("../auth/guards/jwt-auth.guard.js");
 const get_my_tickets_dto_js_1 = require("./dto/get-my-tickets.dto.js");
+const create_ticket_dto_js_1 = require("./dto/create-ticket.dto.js");
 const api_response_dto_js_1 = require("../../common/dto/api-response.dto.js");
 let TicketController = class TicketController {
     ticketService;
     constructor(ticketService) {
         this.ticketService = ticketService;
+    }
+    async createTicket(dto) {
+        const ticket = await this.ticketService.createTicket(dto);
+        return api_response_dto_js_1.ApiResponse.success(ticket, 'Ticket created successfully');
     }
     async getMyTickets(req, query) {
         const user = req.user;
@@ -44,6 +49,13 @@ let TicketController = class TicketController {
     }
 };
 exports.TicketController = TicketController;
+__decorate([
+    (0, common_1.Post)(),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [create_ticket_dto_js_1.CreateTicketDto]),
+    __metadata("design:returntype", Promise)
+], TicketController.prototype, "createTicket", null);
 __decorate([
     (0, common_1.Post)('my-tickets'),
     __param(0, (0, common_1.Req)()),

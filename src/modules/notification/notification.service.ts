@@ -3,7 +3,7 @@ import twilio from 'twilio';
 import * as nodemailer from 'nodemailer';
 import { SmsMessageDto } from './dto/sms.message.dot.js';
 import { EmailMessageDto } from './dto/email.message.dto.js';
-import { ConfigType } from '@nestjs/config';
+import type { ConfigType } from '@nestjs/config';
 import { mailerConfig, twilioConfig } from './config/notificaton.config.js';
 
 @Injectable()

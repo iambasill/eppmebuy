@@ -3,12 +3,17 @@ import { Repository } from 'typeorm';
 import { User } from '../../entities/user.entity.js';
 import { UserStatus } from '../../entities/enums/index.js';
 import { CustomerSupport } from '../../entities/customer-support.entity.js';
+import { UserSession } from '../../entities/user-session.entity.js';
+import { OtpService } from '../otp/otp.service.js';
+import { CreateUserSessionDto } from '../user/dto/user.session.dto.js';
 export declare class AuthService {
     private readonly configService;
     private readonly userRepository;
     private readonly supportRepository;
+    private readonly sessionRepository;
+    private readonly otpService;
     private readonly logger;
-    constructor(configService: ConfigService, userRepository: Repository<User>, supportRepository: Repository<CustomerSupport>);
+    constructor(configService: ConfigService, userRepository: Repository<User>, supportRepository: Repository<CustomerSupport>, sessionRepository: Repository<UserSession>, otpService: OtpService);
     handleGoogleLogin(profile: {
         googleId: string;
         email: string;
@@ -47,6 +52,7 @@ export declare class AuthService {
             scannedCheckIns: import("../../entities/check-in.entity.js").CheckIn[];
             hostedEvents: import("../../entities/event.entity.js").Event[];
             supportRequests: CustomerSupport[];
+            sessions: UserSession[];
             id: string;
         };
     }>;
@@ -55,4 +61,6 @@ export declare class AuthService {
         refreshToken: any;
     }>;
     createSupportRequest(userId: string, data: Partial<CustomerSupport>): Promise<CustomerSupport>;
+    newSession(session: CreateUserSessionDto): Promise<void>;
+    verifyAccount(email: string, token: string): Promise<void>;
 }

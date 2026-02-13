@@ -35,6 +35,8 @@ const search_history_entity_js_1 = require("./search-history.entity.js");
 const user_event_score_entity_js_1 = require("./user-event-score.entity.js");
 const notification_entity_js_1 = require("./notification.entity.js");
 const customer_support_entity_js_1 = require("./customer-support.entity.js");
+const user_session_entity_js_1 = require("./user-session.entity.js");
+const otp_entity_js_1 = require("./otp.entity.js");
 __exportStar(require("./user.entity.js"), exports);
 __exportStar(require("./event.entity.js"), exports);
 __exportStar(require("./user-follow.entity.js"), exports);
@@ -55,6 +57,8 @@ __exportStar(require("./search-history.entity.js"), exports);
 __exportStar(require("./user-event-score.entity.js"), exports);
 __exportStar(require("./notification.entity.js"), exports);
 __exportStar(require("./customer-support.entity.js"), exports);
+__exportStar(require("./user-session.entity.js"), exports);
+__exportStar(require("./otp.entity.js"), exports);
 __exportStar(require("./enums/index.js"), exports);
 exports.ENTITIES = [
     user_entity_js_1.User,
@@ -77,5 +81,7 @@ exports.ENTITIES = [
     user_event_score_entity_js_1.UserEventScore,
     notification_entity_js_1.Notification,
     customer_support_entity_js_1.CustomerSupport,
+    user_session_entity_js_1.UserSession,
+    otp_entity_js_1.Otp,
 ];
 //# sourceMappingURL=index.js.map

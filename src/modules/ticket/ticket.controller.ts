@@ -2,13 +2,20 @@ import { Controller, Post, Param, Body, UseGuards, Req } from '@nestjs/common';
 import type { Request } from 'express';
 import { TicketService } from './ticket.service.js';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
-import { GetMyTicketsDto } from './dto/get-my-tickets.dto.js';
+import { GetMyTicketsDto, EventTiming } from './dto/get-my-tickets.dto.js';
+import { CreateTicketDto } from './dto/create-ticket.dto.js';
 import { ApiResponse } from '../../common/dto/api-response.dto.js';
 
 @Controller('tickets')
 @UseGuards(JwtAuthGuard)
 export class TicketController {
     constructor(private readonly ticketService: TicketService) { }
+
+    @Post()
+    async createTicket(@Body() dto: CreateTicketDto) {
+        const ticket = await this.ticketService.createTicket(dto);
+        return ApiResponse.success(ticket, 'Ticket created successfully');
+    }
 
     @Post('my-tickets')
     async getMyTickets(@Req() req: Request, @Body() query: GetMyTicketsDto) {

@@ -12,6 +12,7 @@ import { Payout } from './payout.entity.js';
 import { CheckIn } from './check-in.entity.js';
 import { Event } from './event.entity.js';
 import { CustomerSupport } from './customer-support.entity.js';
+import { UserSession } from './user-session.entity.js';
 export declare class User {
     id: string;
     firstName: string;
@@ -44,4 +45,5 @@ export declare class User {
     scannedCheckIns: CheckIn[];
     hostedEvents: Event[];
     supportRequests: CustomerSupport[];
+    sessions: UserSession[];
 }

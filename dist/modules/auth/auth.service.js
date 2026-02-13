@@ -55,15 +55,21 @@ const jwt = __importStar(require("jsonwebtoken"));
 const user_entity_js_1 = require("../../entities/user.entity.js");
 const index_js_1 = require("../../entities/enums/index.js");
 const customer_support_entity_js_1 = require("../../entities/customer-support.entity.js");
+const user_session_entity_js_1 = require("../../entities/user-session.entity.js");
+const otp_service_js_1 = require("../otp/otp.service.js");
 let AuthService = AuthService_1 = class AuthService {
     configService;
     userRepository;
     supportRepository;
+    sessionRepository;
+    otpService;
     logger = new common_1.Logger(AuthService_1.name);
-    constructor(configService, userRepository, supportRepository) {
+    constructor(configService, userRepository, supportRepository, sessionRepository, otpService) {
         this.configService = configService;
         this.userRepository = userRepository;
         this.supportRepository = supportRepository;
+        this.sessionRepository = sessionRepository;
+        this.otpService = otpService;
     }
     async handleGoogleLogin(profile, req) {
         let user = await this.userRepository.findOne({
@@ -124,14 +130,30 @@ let AuthService = AuthService_1 = class AuthService {
         await this.supportRepository.save(supportRequest);
         return supportRequest;
     }
+    async newSession(session) {
+        try {
+            const newSession = this.sessionRepository.create(session);
+            await this.sessionRepository.save(newSession);
+        }
+        catch (error) {
+            this.logger.error(`Failed to create session: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            throw error;
+        }
+    }
+    async verifyAccount(email, token) {
+        await this.otpService.verifyOtpCode(email, token);
+    }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = AuthService_1 = __decorate([
     (0, common_1.Injectable)(),
     __param(1, (0, typeorm_1.InjectRepository)(user_entity_js_1.User)),
     __param(2, (0, typeorm_1.InjectRepository)(customer_support_entity_js_1.CustomerSupport)),
+    __param(3, (0, typeorm_1.InjectRepository)(user_session_entity_js_1.UserSession)),
     __metadata("design:paramtypes", [config_1.ConfigService,
         typeorm_2.Repository,
-        typeorm_2.Repository])
+        typeorm_2.Repository,
+        typeorm_2.Repository,
+        otp_service_js_1.OtpService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

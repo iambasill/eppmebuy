@@ -17,6 +17,12 @@ const google_strategy_js_1 = require("./strategies/google.strategy.js");
 const jwt_auth_guard_js_1 = require("./guards/jwt-auth.guard.js");
 const user_entity_js_1 = require("../../entities/user.entity.js");
 const customer_support_entity_js_1 = require("../../entities/customer-support.entity.js");
+const user_session_entity_js_1 = require("../../entities/user-session.entity.js");
+const hashing_provider_js_1 = require("./providers/hashing.provider.js");
+const bcrypt_provider_js_1 = require("./providers/bcrypt.provider.js");
+const user_module_js_1 = require("../user/user.module.js");
+const otp_module_js_1 = require("../otp/otp.module.js");
+const notification_module_js_1 = require("../notification/notification.module.js");
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
@@ -25,11 +31,22 @@ exports.AuthModule = AuthModule = __decorate([
         imports: [
             config_1.ConfigModule,
             passport_1.PassportModule.register({ defaultStrategy: 'google' }),
-            typeorm_1.TypeOrmModule.forFeature([user_entity_js_1.User, customer_support_entity_js_1.CustomerSupport]),
+            typeorm_1.TypeOrmModule.forFeature([user_entity_js_1.User, customer_support_entity_js_1.CustomerSupport, user_session_entity_js_1.UserSession]),
+            user_module_js_1.UserModule,
+            otp_module_js_1.OtpModule,
+            notification_module_js_1.NotificationModule,
         ],
         controllers: [auth_controller_js_1.AuthController],
-        providers: [auth_service_js_1.AuthService, google_strategy_js_1.GoogleStrategy, jwt_auth_guard_js_1.JwtAuthGuard],
-        exports: [auth_service_js_1.AuthService, jwt_auth_guard_js_1.JwtAuthGuard],
+        providers: [
+            auth_service_js_1.AuthService,
+            google_strategy_js_1.GoogleStrategy,
+            jwt_auth_guard_js_1.JwtAuthGuard,
+            {
+                provide: hashing_provider_js_1.HashingProvider,
+                useClass: bcrypt_provider_js_1.BcryptProvider,
+            },
+        ],
+        exports: [auth_service_js_1.AuthService, jwt_auth_guard_js_1.JwtAuthGuard, hashing_provider_js_1.HashingProvider],
     })
 ], AuthModule);
 //# sourceMappingURL=auth.module.js.map
